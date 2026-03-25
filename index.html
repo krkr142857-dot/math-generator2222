@@ -100,6 +100,7 @@ aside::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
 .mode-btns{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .mix-btn{width:100%;padding:9px;border-radius:8px;border:1.5px solid #0891b2;background:#ecfeff;color:#0891b2;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .14s;text-align:center}
 .mix-btn:hover,.mix-btn.on{background:#0891b2;color:#fff;border-color:#0891b2}
+.mix-badge{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;border:1.5px solid currentColor;font-size:10px;font-weight:900;line-height:1;opacity:.95}
 .exam-btn{width:100%;padding:9px;border-radius:8px;border:1.5px solid #7c3aed;background:#faf5ff;color:#7c3aed;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .14s;text-align:center}
 .exam-btn:hover,.exam-btn.on{background:#7c3aed;color:#fff;border-color:#7c3aed}
 .sub-list.disabled{opacity:.35;pointer-events:none;user-select:none}
@@ -301,7 +302,7 @@ details summary::-webkit-details-marker{display:none}
 .wn-head-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--sub);padding:4px;line-height:1}
 /* 필터 영역 */
 .wn-filter-wrap{padding:8px 12px;border-bottom:1px solid var(--bd);flex-shrink:0}
-.wn-grade-row{display:flex;gap:5px;margin-bottom:6px}
+.wn-grade-row{display:flex;align-items:center;gap:5px;margin-bottom:6px}
 /* sub-btn과 동일 스타일로 오답노트 단원 버튼 */
 .wn-sub-grid{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px}
 .wn-sub-btn{padding:5px 7px;border-radius:6px;cursor:pointer;border:1.5px solid var(--bd);background:transparent;color:var(--sub);font-family:inherit;font-size:10px;transition:all .14s;text-align:center;line-height:1.3;width:calc(50% - 2px);flex-shrink:0;box-sizing:border-box}
@@ -314,6 +315,9 @@ details summary::-webkit-details-marker{display:none}
 /* 선택 컨트롤 */
 .wn-sel-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;background:var(--bg2);border-bottom:1px solid var(--bd);font-size:11px;color:var(--sub);flex-shrink:0}
 .wn-sel-all{cursor:pointer;background:transparent;border:1.5px solid var(--bd);border-radius:6px;font-family:inherit;font-size:11px;color:var(--sub);padding:3px 9px;transition:all .15s}.wn-sel-all:hover{border-color:var(--ac);color:var(--ac)}
+.wn-selunits-all{cursor:pointer;background:transparent;border:1.5px solid var(--bd);border-radius:6px;font-family:inherit;font-size:11px;color:var(--sub);padding:3px 9px;transition:all .15s;margin-left:auto}
+.wn-selunits-all:hover{border-color:var(--ac);color:var(--ac)}
+.wn-selunits-all.on{border-color:var(--ac);background:var(--ac-lt);color:var(--ac);font-weight:700}
 /* 목록 */
 .wn-list{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:7px}
 .wn-card{border:1.5px solid var(--bd);border-radius:10px;padding:11px 12px;background:var(--bg2);cursor:pointer;transition:all .15s;position:relative;user-select:none}
@@ -333,6 +337,7 @@ details summary::-webkit-details-marker{display:none}
 .wn-retry-sel{flex:1;padding:9px;background:var(--ac);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .wn-retry-sel:disabled{opacity:0.4;cursor:not-allowed}
 .wn-clear{flex:1;padding:9px;background:transparent;border:1.5px solid #ef4444;border-radius:8px;font-size:13px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit}
+.wn-clear:hover{background:#ef4444;color:#fff}
 /* 오답저장 버튼 - 카드 내 */
 .wn-save-btn{padding:3px 8px;font-size:10px;border:1.5px solid #f97316;color:#f97316;border-radius:5px;background:transparent;cursor:pointer;font-family:inherit;margin-top:4px}
 .wn-save-btn:disabled{opacity:0.45;cursor:not-allowed}
@@ -430,10 +435,10 @@ details summary::-webkit-details-marker{display:none}
     <div>
       <div class="fl">문제 유형</div>
       <div class="ty-row" id="tyG">
-        <button class="ty-btn on" data-v="객관식">객관식</button>
+        <button class="ty-btn on" data-v="OX형">OX형</button>
+        <button class="ty-btn" data-v="객관식">객관식</button>
         <button class="ty-btn" data-v="단답형">단답형</button>
         <button class="ty-btn" data-v="서술형">서술형</button>
-        <button class="ty-btn" data-v="OX형">OX형</button>
       </div>
     </div>
     <div>
@@ -982,7 +987,7 @@ const GRADE_UNITS = {
   ]
 };
 
-const st = {grade:"고1",sub:"다항식",lv:2,lvL:"기본",type:"객관식",cnt:3};
+const st = {grade:"고1",sub:"다항식",lv:2,lvL:"기본",type:"OX형",cnt:3};
 let problems=[],pst=[],selIdx=-1,apiKey="";
 
 // Grade tabs
@@ -1001,6 +1006,28 @@ function buildSubList(grade){
     b.dataset.v=u.v;
     b.innerHTML=u.v+'<div class="sd">'+u.d+'</div>';
     b.addEventListener('click',()=>{
+      // 시험모드에서는 단원 다중 선택이 가능해야 함 (전체가 풀리면 안 됨)
+      if(examMode){
+        b.classList.toggle('on');
+        // 적어도 1개 단원은 선택되게 보정
+        if(!document.querySelectorAll('#subG .sub-btn.on').length) b.classList.add('on');
+        const firstOn=document.querySelector('#subG .sub-btn.on');
+        if(firstOn) st.sub=firstOn.dataset.v;
+        return;
+      }
+      // 혼합 모드에서는 단원 다중 선택이 가능해야 함
+      if(mixMode){
+        b.classList.toggle('on');
+        // 적어도 1개 단원은 선택되게 보정
+        if(!document.querySelectorAll('#subG .sub-btn.on').length) b.classList.add('on');
+        // 선택된 단원 목록 동기화
+        const ons=[...document.querySelectorAll('#subG .sub-btn.on')];
+        mixSubs=new Set(ons.map(x=>x.dataset.v));
+        const firstOn=ons[0];
+        if(firstOn) st.sub=firstOn.dataset.v;
+        updateMixBtnText();
+        return;
+      }
       document.querySelectorAll('#subG .sub-btn').forEach(x=>x.classList.remove('on'));
       b.classList.add('on'); st.sub=u.v;
     });
@@ -1102,6 +1129,19 @@ document.getElementById('mkApplyBtn').addEventListener('click',()=>{
 // 혼합 텍스트+LaTeX 렌더링 함수 (한글 구분 처리)
 function renderMixedLatex(text, el){
   if(!text||!text.trim()){el.innerHTML='<span class="mk-ph">수식 미리보기</span>';return;}
+  // 사용자가 입력기에 넣는 과정에서 backslash가 빠진 경우가 있어 KaTeX가 깨지지 않게 정규화
+  function normalizeKaTeXInput(s){
+    s=String(s);
+    // dfrac/int 처럼 \가 빠진 키워드 보정
+    s=s.replace(/(^|[^\\])dfrac\s*\{/g,(m,p1)=>p1+'\\dfrac{');
+    s=s.replace(/(^|[^\\])int\s*<-\s*/g,(m,p1)=>p1+'\\int ');
+    s=s.replace(/(^|[^\\])int\b/g,(m,p1)=>p1+'\\int');
+    // 곱셈 '*'를 보기 좋은 'cdot'으로 치환
+    s=s.replace(/(^|[^\\])\*\s*/g,(m,p1)=>p1+'\\cdot ');
+    // (입력용) x^n 바로 다음 x는 곱셈으로 보고 점(dot)을 넣기
+    s=s.replace(/x\^(\d+|\{[^}]+\})x(?!\^)/g,'x^$1\\cdot x');
+    return s;
+  }
   const hasKorean=/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(text);
   const hasDollar=/\$/.test(text);
 
@@ -1120,7 +1160,7 @@ function renderMixedLatex(text, el){
     if(m1){tokens.push({type:'latex',v:m1[1]});rest=rest.slice(m1[0].length);continue;}
     // 2) LaTeX 명령어 덩어리 (한글·$·줄바꿈 이전까지)
     const m2=rest.match(/^((?:\\[a-zA-Z]+(?:\{[^}]*\}|\[[^\]]*\])*|[^가-힣ㄱ-ㅎㅏ-ㅣ$\n])+)/);
-    if(m2&&/\\[a-zA-Z]|[\^_{}]/.test(m2[1])){
+    if(m2&&(/\\[a-zA-Z]/.test(m2[1])||/[\^_{}]/.test(m2[1])||/\b(dfrac|int)\b/.test(m2[1]))){
       tokens.push({type:'latex',v:m2[1]});rest=rest.slice(m2[0].length);continue;}
     // 3) 일반 텍스트 (한글, 숫자, 공백 등)
     const m3=rest.match(/^[^$\\]*/);
@@ -1263,7 +1303,67 @@ document.getElementById('latexCopyBtn').addEventListener('click',function(){
 
 function rm(el){if(typeof renderMathInElement==='function')renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});}
 
-function norm(s){return(s||'').replace(/\$/g,'').replace(/\s+/g,'').replace(/\\cdot|\\times|×|\*/g,'').replace(/\\sqrt\{([^}]+)\}/g,'sqrt($1)').replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g,'($1)/($2)').replace(/\^{(\w+)}/g,'^$1').replace(/\\pi/gi,'π').replace(/\\sin/g,'sin').replace(/\\cos/g,'cos').replace(/\\tan/g,'tan').replace(/\\log/g,'log').replace(/\\ln/g,'ln').replace(/²/g,'^2').replace(/³/g,'^3').toLowerCase();}
+// 표시용(KaTeX 렌더용) LaTeX/텍스트 오타 정규화
+// - dfrac(백슬래시 누락) -> \dfrac
+// - int <- 형태 -> \int
+// - ; <- 같은 찌꺼기 제거
+// - '*' 곱셈 기호/ x^n x 를 보기 좋게 cdot 처리
+function normalizeKaTeXDisplayText(s){
+  if(s===null||s===undefined) return '';
+  let r=String(s);
+  // 사용자가/생성기가 남긴 찌꺼기 제거
+  r=r.replace(/;\s*<-\s*/g,'');
+  // dfrac/int 백슬래시 누락 보정 (앞이 백슬래시가 아닌 경우만)
+  r=r.replace(/(^|[^\\])dfrac\s*\{/g,(m,p1)=>p1+'\\dfrac{');
+  r=r.replace(/(^|[^\\])int\s*<-\s*/g,(m,p1)=>p1+'\\int ');
+  // '*' 곱셈 기호(표시용) -> \cdot
+  r=r.replace(/(^|[^\\])\*\s*/g,(m,p1)=>p1+'\\cdot ');
+  // x^n 바로 뒤 x (표시용) -> x^n\cdot x
+  r=r.replace(/x\^(\d+|\{[^}]+\})x(?!\^)/g,'x^$1\\cdot x');
+  return r;
+}
+
+// Splash 로고: Antigravity(마지막 우측) -> Cursor로 교체
+(function(){
+  try{
+    const CURSOR_LOGO_B64='/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAAeAB4DASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD8qq7rwt8F/E/ijwzf+JFs/wCzvD1nC0r6lfZjjlwPuxDGZD/uggdyKj+Cs1vbfE7Qri702y1i3glaVrHUofNt5tqMdrpkZHHTNfrf8H/iJ+zp8f7ez8IeNfA9r4f1q9VbaK0e5uDY3RPASJ1cbCeyNj0BNAH42a34d1Dw9MqXtu0auMxyr80cg9VYcGs2v21/ak+DX7OfwG+DGq6jH8NtLuLmUfYdKtLm5uWWa7YHZhTLnCAFyfRfcV+JTDBIoA6f4aa9p3hnxvpeoasLj+zYnZZzaKrSqrKVJVWIBIznBI6V+mX7N3hbwd4g1fw/rng3W7LXbGG+gklliBFxEwcELMjfNGfYjHpmvymrY8KeMtd8C6xHqvh3WL7Q9TjBVbvT52hkAPUblINAH6mf8FG/Enwxu47X/hL/ABhdWviXSYZBo+gaMRPcbpMFnniJCIrbVG5yrbV+XPSvybJySamvLy41G7murueS6uZnMks0zl3diclmY8kk9zUNAH//2Q==';
+    const labels=[...document.querySelectorAll('#splash *')]
+      .filter(el=>el && el.childNodes && el.childNodes.length===1 && el.childNodes[0].nodeType===3 && (el.textContent||'').trim()==='Antigravity');
+    if(labels.length){
+      const lab=labels[labels.length-1];
+      const box=lab.parentElement;
+      const img=box?box.querySelector('img'):null;
+      if(img) img.setAttribute('src','data:image/jpeg;base64,'+CURSOR_LOGO_B64);
+      lab.textContent='Cursor';
+    }
+  }catch(e){}
+})();
+
+function norm(s){
+  return(s||'')
+    .replace(/;\s*<-\s*/g,'')
+    .replace(/\$/g,'')
+    .replace(/\s+/g,'')
+    .replace(/\\cdot|\\times|×|\*/g,'')
+    .replace(/\\sqrt\{([^}]+)\}/g,'sqrt($1)')
+    // dfrac(표시형 분수)도 frac처럼 판정용으로 치환
+    .replace(/\\dfrac\{([^}]*)\}\{([^}]*)\}/g,'($1)/($2)')
+    .replace(/dfrac\{([^}]*)\}\{([^}]*)\}/g,'($1)/($2)') // backslash 빠짐
+    .replace(/dfrac\s*\{([^}]*)\}\s*\{([^}]*)\}/g,'($1)/($2)') // backslash 빠짐 + 공백
+    .replace(/\\?dfrac\s*\(\s*([^)]*?)\s*\)\s*\(\s*([^)]*?)\s*\)/g,'($1)/($2)') // dfrac(1)(2)
+    .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g,'($1)/($2)')
+    .replace(/int\s*<-\s*/g,'int') // 판정용: int<- 같은 찌꺼기 무시
+    .replace(/\^{(\w+)}/g,'^$1')
+    .replace(/\\pi/gi,'π')
+    .replace(/\\sin/g,'sin')
+    .replace(/\\cos/g,'cos')
+    .replace(/\\tan/g,'tan')
+    .replace(/\\log/g,'log')
+    .replace(/\\ln/g,'ln')
+    .replace(/²/g,'^2')
+    .replace(/³/g,'^3')
+    .toLowerCase();
+}
 
 // ─── 단답형 유사도 채점 ───
 function fuzzyMatch(userAns, correctSa) {
@@ -1272,10 +1372,74 @@ function fuzzyMatch(userAns, correctSa) {
   if(n1===n2) return true;
   // 분수 ↔ 소수 비교: "4/3" vs "1.333..."
   const toNum=s=>{
-    const frac=s.match(/^(-?\d+)\/(-?\d+)$/);
+    s=String(s);
+    // (a)/(b) 형태 정리
+    s=s.replace(/[()]/g,'');
+    const frac=s.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
     if(frac) return parseFloat(frac[1])/parseFloat(frac[2]);
-    return parseFloat(s.replace(/[^0-9.\-]/g,''));
+    const v=parseFloat(s.replace(/[^0-9.\-]/g,''));
+    return isNaN(v)?NaN:v;
   };
+
+  // 합/곱 답 표기 (합=m, 곱=n / 곱=n, 합=m / 합:m, 곱:n 등) 유연 인식
+  const parseSumProd = s=>{
+    s=norm(String(s));
+    // 남는 찌꺼기 제거
+    s=s.replace(/;\s*<-\s*/g,'');
+    // 합 / 곱 값 추출 (숫자/분수 정도만 가정)
+    const mSum=s.match(/합\s*[:=]\s*([^,]*?)(?=곱|$)/);
+    const mProd=s.match(/곱\s*[:=]\s*([^,]*?)(?=합|$)/);
+    if(!mSum||!mProd) return null;
+    const sumVal=toNum(mSum[1]);
+    const prodVal=toNum(mProd[1]);
+    if(isNaN(sumVal)||isNaN(prodVal)) return null;
+    return {sum:sumVal, prod:prodVal};
+  };
+
+  const spU=parseSumProd(userAns);
+  const spC=parseSumProd(correctSa);
+  if(spU&&spC){
+    if(Math.abs(spU.sum-spC.sum)<0.01 && Math.abs(spU.prod-spC.prod)<0.01) return true;
+  }
+
+  // (x-α)(x-β) 인수분해 형태로 입력했을 때도 합/곱과 비교
+  const parseRootsFromFactors = s=>{
+    s=norm(String(s));
+    // (x+α)(x+β) 또는 (x-α)(x-β) 계열만 우선 처리
+    const m=s.match(/\(x\s*([+\-])\s*([^()]+)\)\s*\(x\s*([+\-])\s*([^()]+)\)/);
+    if(!m) return null;
+    const sign1=m[1], v1=toNum(m[2]);
+    const sign2=m[3], v2=toNum(m[4]);
+    if(isNaN(v1)||isNaN(v2)) return null;
+    const r1=sign1==='-'?v1:-v1;
+    const r2=sign2==='-'?v2:-v2;
+    return {sum:r1+r2, prod:r1*r2};
+  };
+  const rootsU=parseRootsFromFactors(userAns);
+  if(spC&&rootsU){
+    if(Math.abs(rootsU.sum-spC.sum)<0.01 && Math.abs(rootsU.prod-spC.prod)<0.01) return true;
+  }
+
+  // 전개된 이차식 형태: x^2+bx+c=0  → 합=-b, 곱=c
+  const parseQuadraticFromPolynomial = s=>{
+    s=norm(String(s));
+    // x^2 + bx + c = 0 (끝이 =0 이거나 생략된 형태)
+    const m=s.match(/x\^2([+\-])([^+-]+)x([+\-])([^=]+?)(?:=0)?$/);
+    if(!m) return null;
+    const signB=m[1]==='-'?-1:1;
+    const bAbs=toNum(m[2]);
+    const signC=m[3]==='-'?-1:1;
+    const cAbs=toNum(m[4]);
+    if(isNaN(bAbs)||isNaN(cAbs)) return null;
+    const b=signB*bAbs;
+    const c=signC*cAbs;
+    // x^2+bx+c=0 이면 두 근 합 = -b, 곱 = c
+    return {sum:-b, prod:c};
+  };
+  const polyU=parseQuadraticFromPolynomial(userAns);
+  if(spC&&polyU){
+    if(Math.abs(polyU.sum-spC.sum)<0.01 && Math.abs(polyU.prod-spC.prod)<0.01) return true;
+  }
   const v1=toNum(n1), v2=toNum(n2);
   if(!isNaN(v1)&&!isNaN(v2)&&Math.abs(v1-v2)<0.01) return true;
   // 루트 비교: sqrt(3)/2 vs √3/2
@@ -1320,12 +1484,14 @@ function renderRP(idx){
           '</div>'
         ).join('')+
       '</div>':'';
+    const ansN=normalizeKaTeXDisplayText(prob.ans);
+    const solN=normalizeKaTeXDisplayText(prob.sol||'');
     rp.innerHTML=
       '<div class="rpl">📋 문제 '+(idx+1)+' 풀이</div>'+
       '<div><div class="fl" style="margin-bottom:5px;color:var(--gn)">✅ 정답</div>'+
-        '<div class="abox open">'+prob.ans+'</div></div>'+
+        '<div class="abox open">'+ansN+'</div></div>'+
       '<div style="margin-top:8px"><div class="fl" style="margin-bottom:5px">풀이</div>'+
-        '<div class="sbox open">'+prob.sol+'</div></div>'+
+        '<div class="sbox open">'+solN+'</div></div>'+
       '<details open><summary>📚 핵심 용어</summary><div class="dbd">'+prob.terms+'</div></details>'+
       '<details><summary>🎯 성취기준</summary><div class="dbd">'+prob.std+'</div></details>'+
       weakHtml;
@@ -1334,10 +1500,37 @@ function renderRP(idx){
   }
 
   // 일반 모드: 힌트 포함
+  const lv=st.lv||1;
+  const hintCount=lv<=1?1:(lv===2?2:3);
+  const hintsAll=Array.isArray(prob.hints)?prob.hints:[];
+  const hintRaw=hintsAll.slice(0, Math.min(hintCount,hintsAll.length));
+  const ansRef=prob.sa!=null?prob.sa:prob.ans;
+  const ansDollarBlocks=(String(ansRef||'').match(/\$([^$]+)\$/g)||[]).map(x=>x.slice(1,-1));
+  const ansNormBlocks=new Set(ansDollarBlocks.map(b=>norm(b)));
+  function sanitizeHint3(hi){
+    let s=String(hi||'');
+    s=s.replace(/\$([^$]+)\$/g,(m,expr)=>{
+      const ne=norm(expr);
+      return ansNormBlocks.has(ne)?'':m;
+    });
+    s=s.trim();
+    // 비면 2번 힌트로 폴백 (정답 제공 방지)
+    if(!s && hintRaw[1]) s=hintRaw[1];
+    return normalizeKaTeXDisplayText(s);
+  }
+  const hintsShown=hintRaw.map((hi,i)=> i===2 ? sanitizeHint3(hi) : normalizeKaTeXDisplayText(hi));
+  let solN=normalizeKaTeXDisplayText(prob.sol||'');
+  // 풀이가 너무 짧으면 힌트 1~2를 기반으로 “추가 단계”를 붙여서 풀어줌
+  if(solN && solN.split('\n').length<3 && hintsShown.length>=2){
+    solN = solN + '\n\n' + '추가 단계 (힌트 기반)\n' +
+      '1) ' + hintsShown[0] + '\n' +
+      '2) ' + hintsShown[1];
+  }
+  const ansN=normalizeKaTeXDisplayText(prob.ans);
   rp.innerHTML='<div class="rpl">💡 문제 '+(idx+1)+' 풀이</div><div><div class="fl" style="margin-bottom:5px">힌트</div>'+
-    prob.hints.map((hi,i)=>'<div class="hint-item"><button class="htog" onclick="thint(\''+uid+'h'+i+'\',this)">힌트 '+(i+1)+'<span class="arr" style="margin-left:auto">▼</span></button><div class="hbd" id="'+uid+'h'+i+'">'+hi+'</div></div>').join('')+
-    '</div><div><button class="rvb rva" onclick="trev(\''+uid+'-a\',this)">정답 확인</button><div class="abox" id="'+uid+'-a">정답: '+prob.ans+'</div></div>'+
-    '<div><button class="rvb rvs" onclick="trev(\''+uid+'-s\',this)">풀이 보기</button><div class="sbox" id="'+uid+'-s">'+prob.sol+'</div></div>'+
+    hintsShown.map((hi,i)=>'<div class="hint-item"><button class="htog" onclick="thint(\''+uid+'h'+i+'\',this)">힌트 '+(i+1)+'<span class="arr" style="margin-left:auto">▼</span></button><div class="hbd" id="'+uid+'h'+i+'">'+hi+'</div></div>').join('')+
+    '</div><div><button class="rvb rva" onclick="trev(\''+uid+'-a\',this)">정답 확인</button><div class="abox" id="'+uid+'-a">정답: '+ansN+'</div></div>'+
+    '<div><button class="rvb rvs" onclick="trev(\''+uid+'-s\',this)">풀이 보기</button><div class="sbox" id="'+uid+'-s">'+solN+'</div></div>'+
     '<details><summary>📚 핵심 용어</summary><div class="dbd">'+prob.terms+'</div></details>'+
     '<details><summary>🎯 성취기준</summary><div class="dbd">'+prob.std+'</div></details>';
   rm(rp);
@@ -1456,13 +1649,19 @@ function doSubmit(idx){
   const ps=pst[idx];if(ps.submitted)return;
   const {prob,sCh,sCi}=problems[idx];
   const card=document.querySelectorAll('.pcard')[idx];
+  const ansN=normalizeKaTeXDisplayText(prob.ans);
 
-  // 시험/혼합 모드: prob.type 기반, 일반: st.type
-  const cardType=(examMode||mixMode)?
-    (prob.type&&prob.type.includes('OX형')?'OX형':
-     prob.type&&prob.type.includes('객관식')&&sCh&&sCh.length?'객관식':
-     prob.type&&prob.type.includes('단답형')?'단답형':'서술형')
-    :st.type;
+  // 시험/혼합 모드: prob.type 기반
+  // 일반 모드: 기본은 st.type이지만, (오답노트 재풀이처럼) prob.type이 단일 타입으로 저장되어 있으면 그걸 우선 사용
+  let cardType;
+  if(examMode||mixMode){
+    cardType=(prob.type&&prob.type.includes('OX형')?'OX형':
+      prob.type&&prob.type.includes('객관식')&&sCh&&sCh.length?'객관식':
+      prob.type&&prob.type.includes('단답형')?'단답형':'서술형');
+  }else{
+    if(prob.type&&prob.type.length===1 && ['객관식','OX형','단답형','서술형'].includes(prob.type[0])) cardType=prob.type[0];
+    else cardType=st.type;
+  }
 
   if(cardType==='서술형'){gradeEssay(idx);return;}
   ps.submitted=true;
@@ -1484,13 +1683,13 @@ function doSubmit(idx){
     });
     const cb=card.querySelector('.cfm-btn');if(cb)cb.disabled=true;
     const fb=card.querySelector('.fb');
-    if(fb){fb.classList.add('show');if(ok){fb.classList.add('fb-ok');fb.textContent='✓ 정답입니다!';}else{fb.classList.add('fb-ng');fb.innerHTML='✗ 오답. 정답: <strong>'+prob.ans+'</strong>';rm(fb);}}
+    if(fb){fb.classList.add('show');if(ok){fb.classList.add('fb-ok');fb.textContent='✓ 정답입니다!';}else{fb.classList.add('fb-ng');fb.innerHTML='✗ 오답. 정답: <strong>'+ansN+'</strong>';rm(fb);}}
   }else{
     const inp=card.querySelector('.sin');
     const ut=inp?inp.value.trim():'';
     ok=fuzzyMatch(ut, prob.sa||prob.ans);
     const fb=card.querySelector('.fb');
-    if(fb){fb.classList.add('show');if(ok){fb.classList.add('fb-ok');fb.textContent='✓ 정답입니다!';}else{fb.classList.add('fb-ng');fb.innerHTML='✗ 오답. 정답: '+prob.ans;}rm(fb);}
+    if(fb){fb.classList.add('show');if(ok){fb.classList.add('fb-ok');fb.textContent='✓ 정답입니다!';}else{fb.classList.add('fb-ng');fb.innerHTML='✗ 오답. 정답: '+ansN;}rm(fb);}
     if(inp)inp.disabled=true;
     const sb=card.querySelector('.ssub');if(sb)sb.disabled=true;
   }
@@ -1513,25 +1712,32 @@ function mkCard(idx){
   const {prob,sCh,sCi}=problems[idx];
   const card=document.createElement('div');
   card.className='pcard';
+  const qN=normalizeKaTeXDisplayText(prob.q);
+  const sChN=(Array.isArray(sCh)?sCh:[]).map(x=>normalizeKaTeXDisplayText(x));
   const retryBtn=examMode?'':'<button class="retry-btn" onclick="event.stopPropagation();retry('+idx+')">↺ 다시 풀기</button>';
   const saveWnBtn='<button class="wn-save-btn" onclick="event.stopPropagation();wnSaveProblem('+idx+')">📕 오답 저장</button>';
   const scoreTag=examMode&&problems[idx].examScore?
     '<div class="exam-score-badge">'+problems[idx].examScore+'점</div>':'';
-  let h='<div class="sdot"></div><div class="ox"></div><div class="ctop"><div class="cnum">문제 '+(idx+1)+'</div>'+scoreTag+retryBtn+saveWnBtn+'</div><div class="card-q">'+prob.q+'</div>';
+  let h='<div class="sdot"></div><div class="ox"></div><div class="ctop"><div class="cnum">문제 '+(idx+1)+'</div>'+scoreTag+retryBtn+saveWnBtn+'</div><div class="card-q">'+qN+'</div>';
 
-  // 시험/혼합 모드: prob.type 기반으로 카드 유형 결정, 일반 모드: st.type
-  const cardType=(examMode||mixMode)?
-    (prob.type&&prob.type.includes('OX형')?'OX형':
-     prob.type&&prob.type.includes('객관식')&&sCh.length?'객관식':
-     prob.type&&prob.type.includes('단답형')?'단답형':'서술형')
-    :st.type;
+  // 시험/혼합 모드: prob.type 기반으로 카드 유형 결정
+  // 일반 모드: 기본은 st.type이지만, (오답노트 재풀이처럼) prob.type이 단일 타입이면 그걸 우선 사용
+  let cardType;
+  if(examMode||mixMode){
+    cardType=(prob.type&&prob.type.includes('OX형')?'OX형':
+      prob.type&&prob.type.includes('객관식')&&sCh.length?'객관식':
+      prob.type&&prob.type.includes('단답형')?'단답형':'서술형');
+  }else{
+    if(prob.type&&prob.type.length===1 && ['객관식','OX형','단답형','서술형'].includes(prob.type[0])) cardType=prob.type[0];
+    else cardType=st.type;
+  }
 
   if(cardType==='객관식'&&sCh.length){
     // 시험모드: 채점 버튼 없음
     if(examMode){
-      h+='<div class="choices">'+'①②③④⑤'.split('').map((n,i)=>sCh[i]?'<div class="cho" data-i="'+i+'"><span class="cn">'+n+'</span><span>'+sCh[i]+'</span></div>':'').join('')+'</div>';
+      h+='<div class="choices">'+'①②③④⑤'.split('').map((n,i)=>sChN[i]?'<div class="cho" data-i="'+i+'"><span class="cn">'+n+'</span><span>'+sChN[i]+'</span></div>':'').join('')+'</div>';
     }else{
-      h+='<div class="choices">'+'①②③④⑤'.split('').map((n,i)=>sCh[i]?'<div class="cho" data-i="'+i+'"><span class="cn">'+n+'</span><span>'+sCh[i]+'</span></div>':'').join('')+'</div><div class="crow"><button class="cfm-btn" disabled>정답 확인</button></div>';
+      h+='<div class="choices">'+'①②③④⑤'.split('').map((n,i)=>sChN[i]?'<div class="cho" data-i="'+i+'"><span class="cn">'+n+'</span><span>'+sChN[i]+'</span></div>':'').join('')+'</div><div class="crow"><button class="cfm-btn" disabled>정답 확인</button></div>';
     }
   }else if(cardType==='OX형'){
     h+='<div class="ox-btns"><button class="ox-choice" data-i="0">O</button><button class="ox-choice" data-i="1">X</button></div>'+
@@ -1747,6 +1953,31 @@ const RAND_GENS = {
       const [p,q,r]=[ri(1,4),ri(1,4),ri(1,4)];
       const s=p+q+r, sq2=p*q+q*r+r*p, pr3=p*q*r;
       return {type:["단답형","서술형"],q:`$x^3-${s}x^2+${sq2}x-${pr3}$를 인수분해하시오.`,choices:[],ci:-1,ans:`$(x-${p})(x-${q})(x-${r})$`,sa:`(x-${p})(x-${q})(x-${r})`,sol:`세 근이 $${p}, ${q}, ${r}$이므로 $(x-${p})(x-${q})(x-${r})$`,hints:[`$x=${p}$ 대입: $f(${p})=0$ 확인`,`인수 $(x-${p})$ 로 나누기`,`나머지 이차식 인수분해`],terms:"인수분해",std:"[10공수01-04] 인수분해"};
+    },
+    ()=>{
+      // 객관식: x^3 - sx^2 + (sq2)x - pr3 의 옳은 인수분해 고르기
+      let p=ri(1,4), q=ri(1,4), r=ri(1,4);
+      let guard=0;
+      while((p===q||p===r||q===r) && guard<10){ p=ri(1,4); q=ri(1,4); r=ri(1,4); guard++; }
+      const s=p+q+r, sq2=p*q+q*r+r*p, pr3=p*q*r;
+      const correct=`$(x-${p})(x-${q})(x-${r})$`;
+      const wrong1=`$(x-${p})(x-${q})(x-${r+1})$`;
+      const wrong2=`$(x-${p})(x-${q})(x-${Math.max(0,r-1)})$`;
+      const wrong3=`$(x-${p})(x-${q+1})(x-${r})$`;
+      const wrong4=`$(x+${p})(x-${q})(x-${r})$`;
+      const choices=[correct,wrong1,wrong2,wrong3,wrong4];
+      return {
+        type:["객관식","단답형","서술형"],
+        q:`$x^3-${s}x^2+${sq2}x-${pr3}$의 인수분해를 고르시오.`,
+        choices:choices,
+        ci:0,
+        ans:correct,
+        sa:`(x-${p})(x-${q})(x-${r})`,
+        sol:`세 근이 $${p}, ${q}, ${r}$이므로 $x^3-${s}x^2+${sq2}x-${pr3}=(x-${p})(x-${q})(x-${r})$`,
+        hints:[`$x=${p}$이면 $f(x)=0$`,`$x=${q}$이면 $f(x)=0$`,`$x=${r}$이면 $f(x)=0$`],
+        terms:"인수분해",
+        std:"[10공수01-04] 인수분해"
+      };
     }
    ],
   },
@@ -1903,8 +2134,55 @@ const RAND_GENS = {
    ],
    5: [
     ()=>{
-      const a=ri(1,3);
-      return {type:["단답형","서술형"],q:`$0\leq x<2\pi$일 때 $\sin x=\dfrac{${a===1?'':''+a}\sqrt{3}}{2}$를 푸시오.`,choices:[],ci:-1,ans:`$x=\dfrac{\pi}{3},\dfrac{2\pi}{3}$`,sa:`pi/3, 2pi/3`,sol:`$\sin x=\dfrac{\sqrt{3}}{2}$이면 $x=\dfrac{\pi}{3},\dfrac{2\pi}{3}$`,hints:["$\sin 60°=\dfrac{\sqrt{3}}{2}$","$\sin(\pi-x)=\sin x$"],terms:"삼각방정식",std:"[12수학Ⅰ-02-03] 삼각방정식"};
+      const cases=[
+        {sin:'\\dfrac{\\sqrt{3}}{2}', x1:'\\dfrac{\\pi}{3}', x2:'\\dfrac{2\\pi}{3}', sa:'pi/3, 2pi/3', cst:'\\sin 60°=\\dfrac{\\sqrt{3}}{2}'},
+        {sin:'-\\dfrac{\\sqrt{3}}{2}', x1:'\\dfrac{4\\pi}{3}', x2:'\\dfrac{5\\pi}{3}', sa:'4pi/3, 5pi/3', cst:'\\sin 240°=-\\dfrac{\\sqrt{3}}{2}'},
+        {sin:'\\dfrac{1}{2}', x1:'\\dfrac{\\pi}{6}', x2:'\\dfrac{5\\pi}{6}', sa:'pi/6, 5pi/6', cst:'\\sin 30°=\\dfrac{1}{2}'},
+        {sin:'-\\dfrac{1}{2}', x1:'\\dfrac{7\\pi}{6}', x2:'\\dfrac{11\\pi}{6}', sa:'7pi/6, 11pi/6', cst:'\\sin 210°=-\\dfrac{1}{2}'}
+      ];
+      const c=cases[ri(0,cases.length-1)];
+      return {
+        type:["단답형","서술형"],
+        q:`$0\\leq x<2\\pi$일 때 $\\sin x=${c.sin}$를 푸시오.`,
+        choices:[],
+        ci:-1,
+        ans:`$x=${c.x1},${c.x2}$`,
+        sa:c.sa,
+        sol:`$\\sin x=${c.sin}$이면 $x=${c.x1},${c.x2}$`,
+        hints:[c.cst,"특수각의 삼각비","범위 $0\\leq x<2\\pi$"],
+        terms:"삼각방정식",
+        std:"[12수학Ⅰ-02-03] 삼각방정식"
+      };
+    },
+    ()=>{
+      // 객관식(다중선택): 보기 중 옳은 해 고르기
+      const cases=[
+        {sin:'\\dfrac{\\sqrt{3}}{2}', x1:'\\dfrac{\\pi}{3}', x2:'\\dfrac{2\\pi}{3}', sa:'pi/3, 2pi/3', cst:'\\sin 60°=\\dfrac{\\sqrt{3}}{2}'},
+        {sin:'-\\dfrac{\\sqrt{3}}{2}', x1:'\\dfrac{4\\pi}{3}', x2:'\\dfrac{5\\pi}{3}', sa:'4pi/3, 5pi/3', cst:'\\sin 240°=-\\dfrac{\\sqrt{3}}{2}'},
+        {sin:'\\dfrac{1}{2}', x1:'\\dfrac{\\pi}{6}', x2:'\\dfrac{5\\pi}{6}', sa:'pi/6, 5pi/6', cst:'\\sin 30°=\\dfrac{1}{2}'},
+        {sin:'-\\dfrac{1}{2}', x1:'\\dfrac{7\\pi}{6}', x2:'\\dfrac{11\\pi}{6}', sa:'7pi/6, 11pi/6', cst:'\\sin 210°=-\\dfrac{1}{2}'}
+      ];
+      const idx=ri(0,cases.length-1);
+      const c=cases[idx];
+      const correct=`$x=${c.x1},${c.x2}$`;
+      const others=cases.filter((_,i)=>i!==idx);
+      const wrong1=`$x=${others[0].x1},${others[0].x2}$`;
+      const wrong2=`$x=${others[1].x1},${others[1].x2}$`;
+      const wrong3=`$x=${c.x1},${others[0].x1}$`;
+      const wrong4=`$x=${others[1].x2},${c.x2}$`;
+      const choices=[correct,wrong1,wrong2,wrong3,wrong4];
+      return {
+        type:["객관식","단답형","서술형"],
+        q:`$0\\leq x<2\\pi$일 때 $\\sin x=${c.sin}$를 푸시오.`,
+        choices:choices,
+        ci:0,
+        ans:correct,
+        sa:c.sa,
+        sol:`$\\sin x=${c.sin}$이면 $x=${c.x1},${c.x2}$`,
+        hints:["특수각의 삼각비", "해당 해 2개 찾기", "범위 확인"],
+        terms:"삼각방정식",
+        std:"[12수학Ⅰ-02-03] 삼각방정식"
+      };
     }
    ],},
   "수열": {
@@ -2113,6 +2391,56 @@ const RAND_GENS = {
       }else{
         return {type:["객관식","단답형","서술형"],q:`$f(x)=${a}xe^x$의 $x=0$에서의 도함수값 $f'(0)$을 구하시오.`,choices:[`$${a}$`,`$${2*a}$`,`$0$`,`$${a+1}$`,`$${a-1}$`],ci:0,ans:`$${a}$`,sa:`${a}`,sol:`$f'(x)=${a}e^x(x+1)$이므로 $f'(0)=${a}\\cdot1\\cdot1=${a}$`,hints:[`$f'(x)=${a}e^x(x+1)$`,`$x=0$ 대입`,`$=${a}$`],terms:"곱의 미분법",std:"[12미적분-02-02] 미분법"};
       }
+    },
+    ()=>{
+      // $f(x)=a\\sin(bx)$ 이고 $f'(0)=ab$ (cos(0)=1)
+      const a=ri(2,5), b=ri(1,4);
+      const ans_num=a*b;
+      return {
+        type:["객관식","단답형","서술형"],
+        q:`$f(x)=${a}\\sin(${b}x)$의 $x=0$에서의 도함수값 $f'(0)$을 구하시오.`,
+        choices:[`$${ans_num}$`,`$${ans_num+1}$`,`$${ans_num-1}$`,`$${ans_num*2}$`,`$${Math.max(0,ans_num-2)}$`],
+        ci:0,
+        ans:`$${ans_num}$`,
+        sa:`${ans_num}`,
+        sol:`$f(x)=${a}\\sin(${b}x)$이면 $f'(x)=${a}\\cdot${b}\\cos(${b}x)=${a*b}\\cos(${b}x)$\n$\\Rightarrow f'(0)=${a*b}\\cos 0=${a*b}$`,
+        hints:[`$(\\sin u)'=\\cos u\\cdot u'` ,`$u=${b}x$ 이므로 $u'=${b}$`,`$\\cos 0=1$`],
+        terms:"삼각함수의 미분",
+        std:"[12미적분-02-02] 삼각함수 미분"
+      };
+    },
+    ()=>{
+      // $f(x)=a\\ln x$ 이고 $f'(x)=a/x$ -> $f'(1)=a$
+      const a=ri(2,6);
+      return {
+        type:["객관식","단답형","서술형"],
+        q:`$f(x)=${a}\\ln x$의 $x=1$에서의 도함수값 $f'(1)$을 구하시오.`,
+        choices:[`$${a}$`,`$${a+1}$`,`$${a-1}$`,`$${a*2}$`,`$1$`],
+        ci:0,
+        ans:`$${a}$`,
+        sa:`${a}`,
+        sol:`$f(x)=${a}\\ln x$ 이면 $f'(x)=${a}\\cdot\\dfrac{1}{x}$ 이므로 $f'(1)=${a}$`,
+        hints:[`$(\\ln x)'=\\dfrac{1}{x}$`,`$x=1$ 대입`],
+        terms:"로그함수의 미분",
+        std:"[12미적분-02-02] 로그미분"
+      };
+    },
+    ()=>{
+      // $f(x)=a e^{bx}$ -> $f'(1)=ab e^b$
+      const a=ri(2,4), b=ri(1,3);
+      const ans_num=a*b;
+      return {
+        type:["객관식","단답형","서술형"],
+        q:`$f(x)=${a}e^{${b}x}$의 $x=1$에서의 도함수값 $f'(1)$을 구하시오.`,
+        choices:[`$${ans_num}e^{${b}}$`,`$${ans_num}e^{${b+1}}$`,`$${ans_num*2}e^{${b}}$`,`$${Math.max(0,ans_num-1)}e^{${b}}$`,`$${ans_num}e^{${Math.max(0,b-1)}}$`],
+        ci:0,
+        ans:`$${ans_num}e^{${b}}$`,
+        sa:`${ans_num}e^${b}`,
+        sol:`$f(x)=${a}e^{${b}x}$ 이면 $f'(x)=${a}\\cdot${b}e^{${b}x}=${ans_num}e^{${b}x}$\n$\\Rightarrow f'(1)=${ans_num}e^{${b}}$`,
+        hints:[`$(e^{ux})'=e^{ux}\\cdot u'$`,`$u=${b}x$ 이므로 $u'=${b}$`,`$x=1$ 대입`],
+        terms:"지수함수의 미분 (연쇄법칙)",
+        std:"[12미적분-02-01] 지수·로그 미분"
+      };
     }
    ],
    2: [
@@ -2187,7 +2515,16 @@ function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 const _pickCache = {}; // key: "grade|sub|lv|type" → Set of recent q hashes
 const _CACHE_SIZE = 12; // 최근 N개 기억
 function _cacheKey(grade,sub,lv,type){ return grade+'|'+sub+'|'+lv+'|'+type; }
-function _hashQ(q){ return String(q).slice(0,60); } // 앞 60자로 해시
+// 전체 문자열 기반 해시 (앞부분 슬라이스로 인한 충돌/중복 방지)
+function _hashQ(q){
+  const s=String(q);
+  let h=0;
+  for(let i=0;i<s.length;i++){
+    h=((h<<5)-h)+s.charCodeAt(i);
+    h|=0;
+  }
+  return String(h>>>0);
+}
 function _wasSeen(key,q){ return (_pickCache[key]||new Set()).has(_hashQ(q)); }
 function _markSeen(key,q){
   if(!_pickCache[key]) _pickCache[key]=new Set();
@@ -2214,6 +2551,12 @@ function spx2(n){if(n===0)return '';if(n===1)return '+x^2';if(n===-1)return '-x^
 function cleanExpr(s){
   if(typeof s!=='string') return String(s);
   let r=s;
+  // dfrac/int처럼 \ 가 빠진 사용자가 입력한 명령어를 정상화
+  r=r.replace(/(^|[^\\])dfrac\s*\{/g,(m,p1)=>p1+'\\dfrac{');
+  r=r.replace(/(^|[^\\])int\s*<-\s*/g,(m,p1)=>p1+'\\int ');
+  r=r.replace(/(^|[^\\])int\b/g,(m,p1)=>p1+'\\int');
+  // '*' 곱셈 기호(사용자 입력) -> 보기 좋은 cdot
+  r=r.replace(/(^|[^\\])\*\s*/g,(m,p1)=>p1+'\\cdot ');
   // 1. *0 패턴 완전 제거: 어떤 것이든 *0 (단, x.0, 1.0 같은 소수 제외)
   r=r.replace(/([+\-]?[\w^{}\\]+)\s*\*\s*0(?![.\d])/g,'');
   r=r.replace(/0\s*\*\s*[\w^{}\\]+/g,'');
@@ -2241,6 +2584,9 @@ function cleanExpr(s){
 }
 
 function cleanLatex(s){
+  s=String(s);
+  // 깨진 LaTeX (예: "$-1"처럼 닫히지 않은 $)가 KaTeX 렌더 실패로 이어지지 않게 보정
+  if(((s.match(/\$/g)||[]).length)%2===1) s+='$';
   // $...$ 안의 수식만 처리
   return s.replace(/\$([^$]+)\$/g,(m,expr)=>'$'+cleanExpr(expr)+'$');
 }
@@ -2331,9 +2677,10 @@ function pick(grade,sub,lv,type,n){
           seen.add(n);
           fixed.push(ch);
         });
-        // 보기 부족 시 안전한 숫자 보완
+        // 보기 부족 시 안전한 숫자 보완 (항상 5지선다를 강요하지 않고 3~4지로 축소)
+        const targetLen=fixed.length>=3?4:3;
         let fillTry=0;
-        while(fixed.length<5 && fillTry<30){
+        while(fixed.length<targetLen && fillTry<30){
           fillTry++;
           const nums=(prob.ans||'').replace(/[^\d.\-]/g,' ').trim().match(/-?\d+\.?\d*/g);
           const base=nums?+nums[0]:NaN;
@@ -2346,7 +2693,11 @@ function pick(grade,sub,lv,type,n){
             cand='$'+(fillTry*4+1)+'$';
           }
           const cn=normFn(cand);
-          if(cn&&!seen.has(cn)){seen.add(cn);fixed.push(cand);}
+          // 정답이 아니라면 "4"가 오답 보정에서 과하게 노출되는 걸 완화
+          if(cn&&!seen.has(cn) && !(cn==='4' && normAns!=='4')){
+            seen.add(cn);
+            fixed.push(cand);
+          }
         }
 
         prob.ci=0; // 정답은 항상 fixed[0]
@@ -2366,12 +2717,39 @@ function pick(grade,sub,lv,type,n){
 
 // ─── 단원 혼합 출제 ───
 let mixMode=false;
+let mixSubs=new Set();
+function updateMixBtnText(){
+  const btn=document.getElementById('mixBtn');
+  if(!btn) return;
+  if(!mixMode){
+    btn.textContent='단원 혼합 출제';
+    return;
+  }
+  const ons=[...document.querySelectorAll('#subG .sub-btn.on')];
+  mixSubs=new Set(ons.map(x=>x.dataset.v));
+  btn.innerHTML='단원 혼합 출제 <span class="mix-badge" id="mixSelBadge">'+mixSubs.size+'개 선택</span>';
+}
 document.getElementById('mixBtn').addEventListener('click',function(){
   mixMode=!mixMode;
   this.classList.toggle('on',mixMode);
-  document.getElementById('subG').classList.toggle('disabled',mixMode);
   // 혼합 모드 ON이면 시험 모드 OFF
   if(mixMode && examMode) toggleExamMode(false);
+
+  if(mixMode){
+    // 기본으로 전부 선택해 "다중 선택 가능"이 바로 보이게 함
+    document.querySelectorAll('#subG .sub-btn').forEach(b=>b.classList.add('on'));
+    updateMixBtnText();
+    const firstOn=document.querySelector('#subG .sub-btn.on');
+    if(firstOn) st.sub=firstOn.dataset.v;
+  }else{
+    // 혼합 종료: 원래대로 첫 단원만 선택
+    const subs=[...document.querySelectorAll('#subG .sub-btn')];
+    subs.forEach((b,i)=>b.classList.toggle('on',i===0));
+    mixSubs.clear();
+    const first=subs[0];
+    if(first) st.sub=first.dataset.v;
+    this.textContent='단원 혼합 출제';
+  }
 });
 
 // ─── 시험 모드 ───
@@ -2401,7 +2779,12 @@ function toggleExamMode(on){
       document.getElementById('cDsp').textContent=st.cnt;
     }
     // 혼합 모드 OFF
-    if(mixMode){ mixMode=false; document.getElementById('mixBtn').classList.remove('on'); document.getElementById('subG').classList.remove('disabled'); }
+    if(mixMode){
+      mixMode=false;
+      mixSubs.clear();
+      const mb=document.getElementById('mixBtn');
+      if(mb){ mb.classList.remove('on'); mb.textContent='단원 혼합 출제'; }
+    }
     // 문제 유형 버튼 비활성화
     document.getElementById('tyG').classList.add('disabled');
     document.getElementById('tyG').style.opacity='0.35';
@@ -2446,7 +2829,14 @@ document.querySelectorAll('#gradeG .grade-tab').forEach(b=>b.addEventListener('c
     document.querySelectorAll('#subG .sub-btn').forEach((btn,i)=>btn.classList.toggle('on',true));
     st.sub=GRADE_UNITS[b.dataset.g][0].v;
   }
-  if(mixMode) document.getElementById('subG').classList.add('disabled');
+  if(mixMode){
+    // 혼합 모드에서는 단원 버튼이 흐릿해지면 안 됨 -> 선택 상태를 시각적으로 유지
+    document.querySelectorAll('#subG .sub-btn').forEach(btn=>btn.classList.add('on'));
+    mixSubs=new Set([...document.querySelectorAll('#subG .sub-btn.on')].map(btn=>btn.dataset.v));
+    const firstOn=[...mixSubs][0];
+    if(firstOn) st.sub=firstOn;
+    updateMixBtnText();
+  }
 }));
 
 
@@ -2556,9 +2946,21 @@ function doSubmitExam(forced){
   // 안 푼 문제 수 계산
   const unanswered=pst.filter((p,i)=>{
     if(!problems[i]) return false;
-    const type=st.type;
-    if(type==='객관식'||type==='OX형') return p.picked===-1 && !p.submitted;
-    return !p.submitted;
+    const typ=problems[i].examType || st.type;
+    if(typ==='객관식' || typ==='OX형'){
+      return p.picked===-1 && !p.submitted;
+    }
+    if(typ==='단답형'){
+      const card=document.querySelectorAll('.pcard')[i];
+      const inp=card?card.querySelector('.sin'):null;
+      return !(inp && inp.value.trim().length>0);
+    }
+    if(typ==='서술형'){
+      const card=document.querySelectorAll('.pcard')[i];
+      const ein=card?card.querySelector('.ein'):null;
+      return !(ein && ein.value.trim().length>0);
+    }
+    return false;
   }).length;
 
   if(!forced && unanswered>0){
@@ -2574,7 +2976,7 @@ function doSubmitExam(forced){
 
   // 타이머 표시 변경
   const t=document.getElementById('examBarTimer');
-  if(t){ t.textContent='제출됨'; t.style.fontSize='14px'; t.style.color='var(--gn)'; t.style.letterSpacing='0'; }
+  if(t){ t.textContent='제출됨'; t.style.fontSize='14px'; t.style.color='var(--gn)'; t.style.letterSpacing='0'; t.style.fontFamily='inherit'; }
   const sb=document.getElementById('examBarSubmit');
   if(sb) sb.disabled=true;
   const info=document.getElementById('examBarInfo');
@@ -2603,6 +3005,7 @@ function gradeExamAll(){
     const ps=pst[idx];
     if(ps.submitted) return;
     const {prob,sCi}=problems[idx];
+    const ansN=normalizeKaTeXDisplayText(prob.ans);
     const card=document.querySelectorAll('.pcard')[idx];
     if(!card) return;
 
@@ -2660,7 +3063,7 @@ function gradeExamAll(){
       if(fb){
         fb.classList.add('show');
         if(ps.isOk){fb.classList.add('fb-ok');fb.textContent='✓ 정답입니다!';}
-        else{fb.classList.add('fb-ng');fb.innerHTML='✗ 오답. 정답: '+prob.ans;}
+        else{fb.classList.add('fb-ng');fb.innerHTML='✗ 오답. 정답: '+ansN;}
       }
       const stamp=card.querySelector('.ox');
       if(stamp){stamp.textContent=ps.isOk?'○':'✕';stamp.classList.add(ps.isOk?'so':'sx');}
@@ -2744,7 +3147,7 @@ function gradeExamAll(){
     if(bar){
       bar.innerHTML=
         '<div class="exam-bar-left"><div class="exam-bar-label">시험 완료</div>'+
-        '<div class="exam-bar-timer-box"><div style="font-size:22px;font-weight:900;font-family:monospace;color:#7c3aed">'+pct+'점</div></div></div>'+
+        '<div class="exam-bar-timer-box"><div style="font-size:22px;font-weight:900;font-family:inherit;color:#7c3aed">'+pct+'점</div></div></div>'+
         '<div style="font-size:12px;color:var(--sub)">'+earnedScore+'/'+totalScore+'점 ('+correct+'/'+total+')</div>'+
         '<div style="font-size:11px;color:var(--dim)">문제 클릭 시 풀이 공개</div>';
     }
@@ -2763,7 +3166,8 @@ document.getElementById('genBtn').addEventListener('click',function(){
 
   if(examMode){
     // 시험 모드: 전체 단원 × 4가지 유형 강제 혼합 (st.type 무시)
-    const units=GRADE_UNITS[st.grade].map(u=>u.v);
+    let units=Array.from(document.querySelectorAll('#subG .sub-btn.on')).map(b=>b.dataset.v);
+    if(!units.length) units=GRADE_UNITS[st.grade].map(u=>u.v);
     const examTypes=['객관식','OX형','단답형','서술형'];
     // 각 단원×유형 조합에서 문제 수집
     let all=[];
@@ -2805,9 +3209,11 @@ document.getElementById('genBtn').addEventListener('click',function(){
     saIdx.forEach((i,j)=>{ problems[i].examScore=scoreInfo.saPts[j]||3; });
     esIdx.forEach((i,j)=>{ problems[i].examScore=scoreInfo.esPts[j]||6; });
   }else if(mixMode){
-    // 혼합 출제: 해당 학년 단원 중 랜덤 2개 이상 선택
-    const allUnits=GRADE_UNITS[st.grade].map(u=>u.v);
-    const pick2=shuf(allUnits).slice(0, Math.max(2, ri(2, allUnits.length)));
+    // 혼합 출제: 선택된 단원 중 랜덤 2개 이상 선택(선택 단원이 1개면 1개만으로 출제)
+    const baseUnits=(mixSubs && mixSubs.size)? [...mixSubs] : GRADE_UNITS[st.grade].map(u=>u.v);
+    const pool=baseUnits.length? baseUnits : GRADE_UNITS[st.grade].map(u=>u.v);
+    const pickN=pool.length===1 ? 1 : Math.max(2, ri(2, pool.length));
+    const pick2=shuf(pool).slice(0,pickN);
     const perUnit=Math.max(1,Math.ceil(st.cnt/pick2.length));
     let all=[];
     pick2.forEach(sub=>{
@@ -2859,7 +3265,7 @@ document.getElementById('genBtn').addEventListener('click',function(){
 // 오답 노트
 // ════════════════════════════════════════════════════
 const WN_KEY='mathWrongNote';
-let _wnGrade='고1', _wnSubs=new Set(), _wnSelected=new Set();
+let _wnGrade='고1', _wnSubs=new Set(), _wnSelected=new Set(), _wnUnitFilterActive=false;
 
 function wnLoad(){ try{ return JSON.parse(localStorage.getItem(WN_KEY)||'[]'); }catch(e){ return []; } }
 function wnSave(items){ localStorage.setItem(WN_KEY,JSON.stringify(items)); wnUpdateCount(); }
@@ -2869,18 +3275,28 @@ function wnUpdateCount(){
   if(el) el.textContent=n;
 }
 
-function wnAddItem(prob,sub,grade){
+function wnAddItem(prob,sub,grade,meta){
   const items=wnLoad();
-  const qHash=String(prob.q).slice(0,80);
+  const qHash=_hashQ(prob.q);
   if(items.some(i=>i.qHash===qHash)) return false;
   const id=Date.now()+'_'+Math.random().toString(36).slice(2,6);
-  items.push({id,grade,sub,q:prob.q,ans:prob.ans,sol:prob.sol||'',qHash,ts:Date.now()});
+  items.push({
+    id,grade,sub,
+    q:prob.q,
+    ans:prob.ans,
+    sa:meta&&meta.sa!=null ? meta.sa : (prob.sa!=null ? prob.sa : prob.ans),
+    sol:prob.sol||'',
+    t:meta&&meta.t ? meta.t : '단답형',
+    sCh:meta&&Array.isArray(meta.sCh) ? meta.sCh : [],
+    sCi:meta&&typeof meta.sCi==='number' ? meta.sCi : -1,
+    qHash,ts:Date.now()
+  });
   wnSave(items);
   return true;
 }
 
 function wnOpen(){
-  _wnGrade='고1'; _wnSubs=new Set(); _wnSelected=new Set();
+  _wnGrade='고1'; _wnSubs=new Set(); _wnSelected=new Set(); _wnUnitFilterActive=false;
   document.getElementById('wnPanel').classList.add('open');
   document.getElementById('wnOverlay').classList.add('show');
   // 학년 버튼: 고1 on
@@ -2895,7 +3311,7 @@ function wnClose(){
 
 // 학년 버튼 클릭 → 단원 그리드 재구성
 function wnSetGrade(btn,grade){
-  _wnGrade=grade; _wnSubs=new Set(); _wnSelected=new Set();
+  _wnGrade=grade; _wnSubs=new Set(); _wnSelected=new Set(); _wnUnitFilterActive=false;
   document.querySelectorAll('#wnGradeRow .wn-fbtn').forEach(b=>b.classList.toggle('on',b===btn));
   wnBuildSubGrid(grade);
   wnRender();
@@ -2912,6 +3328,7 @@ function wnBuildSubGrid(grade){
 
 // 단원 다중 선택 토글
 function wnToggleSub(btn,sub){
+  _wnUnitFilterActive=true;
   if(_wnSubs.has(sub)) _wnSubs.delete(sub);
   else _wnSubs.add(sub);
   btn.classList.toggle('on',_wnSubs.has(sub));
@@ -2919,11 +3336,36 @@ function wnToggleSub(btn,sub){
   wnRender();
 }
 
+// 단원 "모두 선택" 토글 (다시 클릭하면 선택 해제)
+function wnToggleAllUnits(){
+  const units=(GRADE_UNITS[_wnGrade]||[]).map(u=>u.v);
+  if(!units.length) return;
+  // 현재 "모두 선택" 상태면 해제
+  const isAll=_wnUnitFilterActive && _wnSubs.size===units.length;
+  _wnUnitFilterActive=true;
+  _wnSelected=new Set();
+  if(isAll){
+    _wnSubs=new Set();
+    document.querySelectorAll('#wnSubGrid .wn-sub-btn').forEach(b=>b.classList.remove('on'));
+  }else{
+    _wnSubs=new Set(units);
+    document.querySelectorAll('#wnSubGrid .wn-sub-btn').forEach(b=>{
+      b.classList.toggle('on',_wnSubs.has(b.dataset.sub));
+    });
+  }
+  wnRender();
+}
+
 // 현재 필터 적용
 function wnFiltered(){
   let items=wnLoad();
   if(_wnGrade) items=items.filter(i=>i.grade===_wnGrade);
-  if(_wnSubs.size>0) items=items.filter(i=>_wnSubs.has(i.sub));
+  if(_wnUnitFilterActive){
+    if(_wnSubs.size===0) return [];
+    items=items.filter(i=>_wnSubs.has(i.sub));
+  }else{
+    if(_wnSubs.size>0) items=items.filter(i=>_wnSubs.has(i.sub));
+  }
   return items;
 }
 
@@ -2933,14 +3375,19 @@ function wnRender(){
   const list=document.getElementById('wnList');
   const selInfo=document.getElementById('wnSelInfo');
   const retrySelBtn=document.getElementById('wnRetrySelBtn');
+  const allBtn=document.getElementById('wnSelUnitsAllBtn');
+  if(allBtn){
+    const totalUnits=(GRADE_UNITS[_wnGrade]||[]).length;
+    allBtn.classList.toggle('on',_wnUnitFilterActive && totalUnits>0 && _wnSubs.size===totalUnits);
+  }
 
   _wnSelected=new Set([..._wnSelected].filter(id=>filtered.some(i=>i.id===id)));
   if(selInfo) selInfo.textContent=_wnSelected.size+'개 선택됨';
   if(retrySelBtn) retrySelBtn.disabled=_wnSelected.size===0;
 
   if(!filtered.length){
-    const msg=_wnSubs.size>0
-      ? '선택한 단원의 오답이 없습니다.'
+    const msg=_wnUnitFilterActive
+      ? (_wnSubs.size>0 ? '선택한 단원의 오답이 없습니다.' : '선택한 단원이 없습니다.')
       : '저장된 오답이 없습니다.<br>틀린 문제 아래 📕 오답 저장 버튼으로<br>저장하세요.';
     list.innerHTML=`<div class="wn-empty">${msg}</div>`;
     return;
@@ -3011,10 +3458,22 @@ function wnRetry(){
   if(!items.length){ alert('재풀이할 문제를 선택해주세요.'); return; }
   wnClose();
   problems=items.map(item=>({
-    prob:{q:item.q,ans:item.ans,sa:item.ans,sol:item.sol,
-          type:['단답형'],choices:[],ci:-1,hints:[],terms:'',std:''},
-    sCh:[],sCi:-1,
-    examSub:item.sub,examType:'단답형'
+    prob:{
+      q:item.q,
+      ans:item.ans,
+      sa:item.sa!=null ? item.sa : item.ans,
+      sol:item.sol||'',
+      type:[item.t||'단답형'],
+      choices:[],
+      ci:-1,
+      hints:[],
+      terms:'',
+      std:''
+    },
+    sCh:Array.isArray(item.sCh) ? item.sCh : [],
+    sCi:typeof item.sCi==='number' ? item.sCi : -1,
+    examSub:item.sub,
+    examType:item.t||'단답형'
   }));
   pst=problems.map(()=>({picked:-1,submitted:false,isOk:null,userText:''}));
   const cp=document.getElementById('cp'),rp=document.getElementById('rp');
@@ -3031,7 +3490,23 @@ function wnSaveProblem(idx){
   const {prob}=problems[idx];
   const sub=problems[idx].examSub||st.sub;
   const grade=st.grade;
-  const saved=wnAddItem(prob,sub,grade);
+  const sCh=problems[idx].sCh||[];
+  const sCi=typeof problems[idx].sCi==='number' ? problems[idx].sCi : -1;
+  // 현재 카드에 표시된 타입을 저장해야 재풀이 시 타입이 유지됨
+  let cardType;
+  if(examMode||mixMode){
+    cardType=(prob.type&&prob.type.includes('OX형')?'OX형':
+      prob.type&&prob.type.includes('객관식')&&sCh.length?'객관식':
+      prob.type&&prob.type.includes('단답형')?'단답형':'서술형');
+  }else{
+    cardType=st.type;
+  }
+  const saved=wnAddItem(prob,sub,grade,{
+    t:cardType,
+    sa:prob.sa!=null ? prob.sa : prob.ans,
+    sCh:cardType==='객관식' ? sCh : [],
+    sCi:cardType==='객관식' ? sCi : -1
+  });
   const btn=document.querySelectorAll('.pcard')[idx]?.querySelector('.wn-save-btn');
   if(btn){
     btn.textContent=saved?'✓ 저장됨':'✓ 이미 저장됨';
@@ -3071,6 +3546,7 @@ function toggleTheme(){
       <button class="wn-fbtn on" data-g="고1" onclick="wnSetGrade(this,'고1')">고1</button>
       <button class="wn-fbtn" data-g="고2" onclick="wnSetGrade(this,'고2')">고2</button>
       <button class="wn-fbtn" data-g="고3" onclick="wnSetGrade(this,'고3')">고3</button>
+      <button class="wn-selunits-all" id="wnSelUnitsAllBtn" onclick="wnToggleAllUnits()">모두 선택</button>
     </div>
     <div class="wn-sub-grid" id="wnSubGrid"></div>
   </div>
