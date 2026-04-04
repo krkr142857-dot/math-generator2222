@@ -2,7 +2,7 @@
 // [고3 미적분 II] 수열의 극한 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"수렴하는 수열은 유계이다.",ans:"O",exp:"수렴 수열은 반드시 상한과 하한이 존재하는 유계 수열이다."},
