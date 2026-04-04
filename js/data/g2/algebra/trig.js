@@ -2,7 +2,7 @@
 // [고2 대수] 삼각함수 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"$\\sin^2\\theta + \\cos^2\\theta = 1$이다.",ans:"O",exp:"피타고라스 항등식으로 모든 실수 $\\theta$에 대해 성립한다."},
