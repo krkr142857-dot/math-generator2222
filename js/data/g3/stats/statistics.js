@@ -2,7 +2,7 @@
 // [고3 확률과 통계] 통계 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"정규분포 $N(m,\\sigma^2)$에서 평균은 $m$, 분산은 $\\sigma^2$이다.",ans:"O",exp:"정규분포의 모수이다."},
