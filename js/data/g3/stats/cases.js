@@ -2,7 +2,7 @@
 // [고3 확률과 통계] 경우의 수 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"$_nP_r = \\dfrac{n!}{(n-r)!}$이다.",ans:"O",exp:"순열 공식으로 $n$개 중 $r$개를 순서 있게 나열하는 경우의 수이다."},
