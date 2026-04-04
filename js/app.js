@@ -2,10 +2,10 @@ import { GRADE_UNITS } from './data/curriculum.js';
 import { initSidebar } from './ui/sidebar.js';
 import { initKeyboards } from './ui/keyboard.js';
 import { initWrongNoteEvents } from './ui/wrong-note.js';
-import { mkCard, rm, selCard, renderRP } from './ui/renderer.js';
-import { startExamTimer, getExamScores, EXAM_DIST } from './ui/exam.js';
+import { mkCard, rm, selCard, renderRP, mkUpdate } from './ui/renderer.js';
+import { startExamTimer } from './ui/exam.js';
 
-// --- 전역 상태 ---
+// --- 전역 상태 관리 ---
 export const state = {
     st: { grade: "고1", sub: "다항식", lv: 2, lvL: "기본", type: "OX형", cnt: 3 },
     problems: [],
@@ -35,7 +35,7 @@ export function spx(n) { if (n === 0) return ''; if (n === 1) return '+x'; if (n
 export function scx(n) { if (n === 0) return '0'; if (n === 1) return 'x'; if (n === -1) return '-x'; return n + 'x'; }
 export function scx2(n) { if (n === 1) return 'x^2'; if (n === -1) return '-x^2'; return n + 'x^2'; }
 
-// --- 데이터 맵핑 ---
+// --- 데이터 로드 ---
 import * as g1_p from './data/g1/math1/polynomials.js';
 import * as g1_e from './data/g1/math1/equations.js';
 import * as g1_c from './data/g1/math1/combinations.js';
@@ -91,7 +91,10 @@ window.generateProblems = () => {
     const rp = document.getElementById('rp');
     if (state.examTimerID) { clearInterval(state.examTimerID); state.examTimerID = null; }
     state.selIdx = -1;
-    
+    const mkInputEl = document.getElementById('mkInput');
+    if (mkInputEl) mkInputEl.value = '';
+    mkUpdate();
+
     if (state.examMode) {
         let all = [];
         Object.keys(DATA_MAP[state.st.grade]).forEach(s => {
@@ -100,15 +103,20 @@ window.generateProblems = () => {
             });
         });
         state.problems = shuf(all).slice(0, state.st.cnt);
+    } else if (state.mixMode) {
+        let all = [];
+        state.mixSubs.forEach(sub => { all = all.concat(pick(state.st.grade, sub, state.st.lv, state.st.type, state.st.cnt)); });
+        state.problems = shuf(all).slice(0, state.st.cnt);
     } else {
         state.problems = pick(state.st.grade, state.st.sub, state.st.lv, state.st.type, state.st.cnt);
     }
 
     state.pst = state.problems.map(() => ({ picked: -1, submitted: false, isOk: null, userText: '' }));
     cp.innerHTML = '';
-    
+    if (rp) rp.innerHTML = '<div class="rp-empty"><div class="rp-empty-ico">👆</div><div class="rp-empty-tx">문제를 클릭하면<br>힌트·정답·풀이가 나옵니다</div></div>';
+
     if (state.problems.length === 0) {
-        cp.innerHTML = '<div class="empty-st"><div class="empty-tx">문제가 없습니다.</div></div>';
+        cp.innerHTML = '<div class="empty-st"><div class="empty-ico">😅</div><div class="empty-tx">선택한 조건의 문제가 없습니다.</div></div>';
         return;
     }
 
