@@ -1,6 +1,9 @@
-import { state, setters, rm as globalRm } from '../app.js';
+import { state, setters, shuf, ri } from '../app.js';
 import { wnSaveProblem } from './wrong-note.js';
 
+// --- 1. 수식 및 텍스트 렌더링 엔진 ---
+
+// KaTeX 자동 렌더링 함수
 export function rm(el) {
     if (typeof renderMathInElement === 'function') {
         renderMathInElement(el, {
@@ -13,44 +16,72 @@ export function rm(el) {
     }
 }
 
+// 텍스트와 수식이 섞인 입력을 KaTeX로 변환 (중요: keyboard.js에서 호출함)
+export function renderMixedLatex(text, el) {
+    if (!text || !text.trim()) {
+        el.innerHTML = '<span class="mk-ph">수식 미리보기</span>';
+        return;
+    }
+    
+    // 1) $...$ 블록 및 일반 텍스트 분리 토큰화
+    const tokens = [];
+    let rest = text;
+    while (rest.length > 0) {
+        const m1 = rest.match(/^\$([^$]+)\$/);
+        if (m1) {
+            tokens.push({ type: 'latex', v: m1[1] });
+            rest = rest.slice(m1[0].length);
+            continue;
+        }
+        const m2 = rest.match(/^((?:\\[a-zA-Z]+(?:\{[^}]*\}|\[[^\]]*\])*|[^가-힣ㄱ-ㅎㅏ-ㅣ$\n])+)/);
+        if (m2 && (/\\[a-zA-Z]/.test(m2[1]) || /[\^_{}]/.test(m2[1]))) {
+            tokens.push({ type: 'latex', v: m2[1] });
+            rest = rest.slice(m2[0].length);
+            continue;
+        }
+        const m3 = rest.match(/^[^$\\]*/);
+        if (m3 && m3[0].length > 0) {
+            tokens.push({ type: 'text', v: m3[0] });
+            rest = rest.slice(m3[0].length);
+            continue;
+        }
+        tokens.push({ type: 'text', v: rest[0] });
+        rest = rest.slice(1);
+    }
+
+    el.innerHTML = tokens.map(t => {
+        if (t.type === 'latex') {
+            try { return katex.renderToString(t.v, { throwOnError: false, displayMode: false }); }
+            catch (e) { return `<span>${t.v}</span>`; }
+        }
+        return t.v.replace(/\n/g, '<br>');
+    }).join('');
+}
+
 export function normalizeKaTeXDisplayText(s) {
-    if (s === null || s === undefined) return '';
+    if (!s) return '';
     let r = String(s);
     r = r.replace(/;\s*<-\s*/g, '');
     r = r.replace(/(^|[^\\])dfrac\s*\{/g, (m, p1) => p1 + '\\dfrac{');
     r = r.replace(/(^|[^\\])int\s*<-\s*/g, (m, p1) => p1 + '\\int ');
     r = r.replace(/(^|[^\\])\*\s*/g, (m, p1) => p1 + '\\cdot ');
     r = r.replace(/x\^(\d+|\{[^}]+\})x(?!\^)/g, 'x^$1\\cdot x');
-    r = r.replace(/(^|[^\\])cdot\b/g, (m, p1) => p1 + '\\cdot ');
     return r;
 }
 
+// --- 2. 정답 판정 및 채점 로직 ---
+
 export function norm(s) {
-    return (s || '')
-        .replace(/;\s*<-\s*/g, '')
-        .replace(/\$/g, '')
-        .replace(/\s+/g, '')
-        .replace(/\\cdot|\\times|×|\*/g, '')
-        .replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)')
-        .replace(/\\dfrac\{([^}]*)\}\{([^}]*)\}/g, '($1)/($2)')
-        .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, '($1)/($2)')
-        .replace(/\^{(\w+)}/g, '^$1')
-        .replace(/\\pi/gi, 'π')
-        .replace(/\\sin/g, 'sin')
-        .replace(/\\cos/g, 'cos')
-        .replace(/\\tan/g, 'tan')
-        .toLowerCase();
+    return (s || '').replace(/\$/g, '').replace(/\s+/g, '').toLowerCase();
 }
 
 export function fuzzyMatch(userAns, correctSa) {
     if (!userAns || !correctSa) return false;
     const n1 = norm(userAns), n2 = norm(correctSa);
     if (n1 === n2) return true;
+    
     const toNum = s => {
-        s = String(s).replace(/[()]/g, '');
-        const frac = s.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
-        if (frac) return parseFloat(frac[1]) / parseFloat(frac[2]);
-        const v = parseFloat(s.replace(/[^0-9.\-]/g, ''));
+        const v = parseFloat(String(s).replace(/[^0-9.\-]/g, ''));
         return isNaN(v) ? NaN : v;
     };
     const v1 = toNum(n1), v2 = toNum(n2);
@@ -58,20 +89,20 @@ export function fuzzyMatch(userAns, correctSa) {
     return false;
 }
 
+// --- 3. UI 업데이트 및 카드 생성 ---
+
 export function renderRP(idx) {
     const rp = document.getElementById('rp');
+    if (!state.problems[idx]) return;
     const { prob } = state.problems[idx];
     const uid = 'u' + idx;
 
     if (state.examMode && !state.problems._examDone) {
-        rp.innerHTML = '<div class="rp-empty">🔒 시험 제출 후 공개됩니다.</div>';
+        rp.innerHTML = '<div class="rp-empty">🔒 제출 후 공개</div>';
         return;
     }
 
-    const ansN = normalizeKaTeXDisplayText(prob.ans);
-    const solN = normalizeKaTeXDisplayText(prob.sol || '');
     const hints = Array.isArray(prob.hints) ? prob.hints : [];
-
     rp.innerHTML = `
         <div class="rpl">💡 문제 ${idx + 1} 풀이</div>
         <div class="fl">힌트</div>
@@ -80,12 +111,18 @@ export function renderRP(idx) {
                 <button class="htog" onclick="window.thint('${uid}h${i}',this)">힌트 ${i + 1} <span class="arr">▼</span></button>
                 <div class="hbd" id="${uid}h${i}">${normalizeKaTeXDisplayText(hi)}</div>
             </div>`).join('')}
-        <button class="rvb rva" onclick="window.trev('${uid}-a',this)">정답 확인</button>
-        <div class="abox" id="${uid}-a">정답: ${ansN}</div>
-        <button class="rvb rvs" onclick="window.trev('${uid}-s',this)">풀이 보기</button>
-        <div class="sbox" id="${uid}-s">${solN}</div>
+        <div><button class="rvb rva" onclick="window.trev('${uid}-a',this)">정답 확인</button>
+        <div class="abox" id="${uid}-a">정답: ${normalizeKaTeXDisplayText(prob.ans)}</div></div>
+        <div><button class="rvb rvs" onclick="window.trev('${uid}-s',this)">풀이 보기</button>
+        <div class="sbox" id="${uid}-s">${normalizeKaTeXDisplayText(prob.sol)}</div></div>
     `;
     rm(rp);
+}
+
+export function selCard(idx) {
+    state.selIdx = idx;
+    document.querySelectorAll('.pcard').forEach((c, i) => c.classList.toggle('sel', i === idx));
+    renderRP(idx);
 }
 
 export function mkCard(idx) {
@@ -98,56 +135,107 @@ export function mkCard(idx) {
         <div class="ox"></div>
         <div class="ctop">
             <div class="cnum">문제 ${idx + 1}</div>
-            <button class="retry-btn" onclick="window.retry(${idx})">↺ 다시</button>
+            ${state.examMode ? '' : `<button class="retry-btn" onclick="window.retry(${idx})">↺ 다시</button>`}
             <button class="wn-save-btn" onclick="window.wnSaveProblem(${idx})">📕 저장</button>
         </div>
         <div class="card-q">${qN}</div>
     `;
 
-    const type = (state.examMode || state.mixMode) ? (prob.type[0] || "객관식") : state.st.type;
+    const cardType = (state.examMode || state.mixMode) ? 
+        (prob.type.includes('OX형') ? 'OX형' : (sCh && sCh.length ? '객관식' : '단답형')) : state.st.type;
 
-    if (type === '객관식') {
+    if (cardType === '객관식') {
         h += `<div class="choices">${sCh.map((c, i) => `
             <div class="cho" data-i="${i}"><span class="cn">${"①②③④⑤"[i]}</span>${normalizeKaTeXDisplayText(c)}</div>`).join('')}
-        </div><div class="crow"><button class="cfm-btn" disabled>확인</button></div>`;
-    } else if (type === 'OX형') {
+        </div><div class="crow"><button class="cfm-btn" disabled>정답 확인</button></div>`;
+    } else if (cardType === 'OX형') {
         h += `<div class="ox-btns">
             <button class="ox-choice" data-i="0">O</button>
             <button class="ox-choice" data-i="1">X</button>
-        </div><div class="crow"><button class="cfm-btn" disabled>확인</button></div>`;
-    } else if (type === '단답형') {
-        h += `<div class="short-wrap"><input class="sin" type="text" placeholder="답안 입력"/><div class="ans-rendered"></div><button class="ssub">확인</button></div><div class="fb"></div>`;
+        </div><div class="crow"><button class="cfm-btn" disabled>정답 확인</button></div>`;
+    } else if (cardType === '단답형') {
+        h += `<div class="short-wrap"><input class="sin" type="text" placeholder="정답 입력"/><div class="ans-rendered"></div></div><div class="fb"></div>`;
     } else {
-        h += `<div class="essay-wrap"><textarea class="ein" placeholder="풀이와 답 입력"></textarea><button class="esub">채점</button></div><div class="fb"></div>`;
+        h += `<div class="essay-wrap"><textarea class="ein" placeholder="풀이 과정 입력"></textarea><button class="esub">채점하기</button></div><div class="fb"></div>`;
     }
 
     card.innerHTML = h;
+
+    // --- 이벤트 바인딩 ---
     card.onclick = () => selCard(idx);
-    
-    // 이벤트 바인딩 (간략화된 예시, 실제 원본 로직 유지 필요)
-    card.querySelectorAll('.cho').forEach(el => el.onclick = (e) => {
-        e.stopPropagation();
-        card.querySelectorAll('.cho').forEach(c => c.classList.remove('pk'));
-        el.classList.add('pk');
-        state.pst[idx].picked = +el.dataset.i;
-        card.querySelector('.cfm-btn').disabled = false;
+
+    // 객관식 클릭
+    card.querySelectorAll('.cho').forEach(el => {
+        el.onclick = (e) => {
+            e.stopPropagation();
+            if (state.pst[idx].submitted) return;
+            card.querySelectorAll('.cho').forEach(c => c.classList.remove('pk'));
+            el.classList.add('pk');
+            state.pst[idx].picked = +el.dataset.i;
+            card.querySelector('.cfm-btn').disabled = false;
+        };
     });
+
+    // OX 클릭
+    card.querySelectorAll('.ox-choice').forEach(el => {
+        el.onclick = (e) => {
+            e.stopPropagation();
+            if (state.pst[idx].submitted) return;
+            card.querySelectorAll('.ox-choice').forEach(c => c.classList.remove('pk'));
+            el.classList.add('pk');
+            state.pst[idx].picked = +el.dataset.i;
+            card.querySelector('.cfm-btn').disabled = false;
+        };
+    });
+
+    // 확인 버튼 (제출)
+    const cfmBtn = card.querySelector('.cfm-btn');
+    if (cfmBtn) cfmBtn.onclick = (e) => {
+        e.stopPropagation();
+        window.doSubmit(idx);
+    };
 
     return card;
 }
 
-export function selCard(idx) {
-    state.selIdx = idx;
-    document.querySelectorAll('.pcard').forEach((c, i) => c.classList.toggle('sel', i === idx));
-    renderRP(idx);
-}
+// --- 4. 전역 함수 바인딩 (index.html에서 호출 가능하도록) ---
 
 window.thint = (id, btn) => {
     const el = document.getElementById(id);
     el.classList.toggle('open');
     btn.querySelector('.arr').textContent = el.classList.contains('open') ? '▲' : '▼';
 };
+
 window.trev = (id, btn) => {
-    document.getElementById(id).classList.toggle('open');
+    const el = document.getElementById(id);
+    el.classList.toggle('open');
+    if (id.endsWith('-a')) btn.textContent = el.classList.contains('open') ? '정답 숨기기' : '정답 확인';
+    else btn.textContent = el.classList.contains('open') ? '풀이 숨기기' : '풀이 보기';
 };
-window.wnSaveProblem = wnSaveProblem;
+
+window.retry = (idx) => {
+    state.pst[idx] = { picked: -1, submitted: false, isOk: null, userText: '' };
+    const cp = document.getElementById('cp');
+    const cards = cp.querySelectorAll('.pcard');
+    const newCard = mkCard(idx);
+    cp.replaceChild(newCard, cards[idx]);
+    rm(newCard);
+    selCard(idx);
+};
+
+window.doSubmit = (idx) => {
+    const ps = state.pst[idx];
+    if (ps.submitted) return;
+    const { prob, sCi } = state.problems[idx];
+    const card = document.querySelectorAll('.pcard')[idx];
+    
+    ps.submitted = true;
+    let isOk = ps.picked === sCi;
+    ps.isOk = isOk;
+
+    card.classList.add(isOk ? 'ok' : 'ng');
+    const stamp = card.querySelector('.ox');
+    if (stamp) { stamp.textContent = isOk ? '○' : '✕'; stamp.className = `ox ${isOk ? 'so' : 'sx'}`; }
+    
+    if (state.selIdx === idx) renderRP(idx);
+};
