@@ -2,7 +2,7 @@
 // [고1 공통수학1] 방정식과 부등식 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js'; 
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"이차방정식 $ax^2+bx+c=0$의 판별식 $D=b^2-4ac>0$이면 서로 다른 두 실근을 가진다.",ans:"O",exp:"$D>0$이면 근의 공식에서 $\\sqrt{D}>0$이므로 두 실근이 서로 다르다."},
