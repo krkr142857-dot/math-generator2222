@@ -1,4 +1,4 @@
-import { state, ri, shuf } from '../app.js';
+import { state, shuf, ri } from '../app.js';
 import { wnSaveProblem } from './wrong-note.js';
 
 export function rm(el) {
@@ -55,23 +55,21 @@ export function renderRP(idx) {
     const { prob } = state.problems[idx];
     const uid = 'u' + idx;
     if (state.examMode && !state.problems._examDone) {
-        rp.innerHTML = '<div class="rp-empty">🔒 제출 후 공개</div>'; return;
+        rp.innerHTML = '<div class="rp-empty">🔒 제출 후 공개됩니다.</div>'; return;
     }
     const hints = Array.isArray(prob.hints) ? prob.hints : [];
     rp.innerHTML = `
         <div class="rpl">💡 문제 ${idx + 1} 풀이</div>
         <div class="fl">힌트</div>
-        ${hints.map((hi, i) => `<div class="hint-item"><button class="htog" onclick="window.thint('${uid}h${i}',this)">힌트 ${i+1} <span class="arr">▼</span></button><div class="hbd" id="${uid}h${i}">${normalizeKaTeXDisplayText(hi)}</div></div>`).join('')}
-        <div><button class="rvb rva" onclick="window.trev('${uid}-a',this)">정답 확인</button>
-        <div class="abox" id="${uid}-a">정답: ${normalizeKaTeXDisplayText(prob.ans)}</div></div>
-        <div><button class="rvb rvs" onclick="window.trev('${uid}-s',this)">풀이 보기</button>
-        <div class="sbox" id="${uid}-s">${normalizeKaTeXDisplayText(prob.sol)}</div></div>
+        ${hints.map((hi, i) => `<div class="hint-item"><button class="htog" onclick="window.thint('${uid}h${i}',this)">힌트 ${i + 1} <span class="arr">▼</span></button><div class="hbd" id="${uid}h${i}">${normalizeKaTeXDisplayText(hi)}</div></div>`).join('')}
+        <div><button class="rvb rva" onclick="window.trev('${uid}-a',this)">정답 확인</button><div class="abox" id="${uid}-a">정답: ${normalizeKaTeXDisplayText(prob.ans)}</div></div>
+        <div><button class="rvb rvs" onclick="window.trev('${uid}-s',this)">풀이 보기</button><div class="sbox" id="${uid}-s">${normalizeKaTeXDisplayText(prob.sol)}</div></div>
     `;
     rm(rp);
 }
 
 export function mkCard(idx) {
-    const { prob, sCh } = state.problems[idx];
+    const { prob, sCh, sCi } = state.problems[idx];
     const card = document.createElement('div');
     card.className = 'pcard';
     const type = (state.examMode || state.mixMode) ? (prob.type.includes('OX형') ? 'OX형' : (sCh && sCh.length ? '객관식' : '단답형')) : state.st.type;
@@ -88,15 +86,13 @@ export function mkCard(idx) {
         h += `<div class="essay-wrap"><textarea class="ein" placeholder="풀이 과정 입력"></textarea><button class="esub" onclick="window.doSubmit(${idx})">채점</button></div><div class="fb"></div>`;
     }
     card.innerHTML = h;
-
+    
     card.onclick = () => selCard(idx);
     card.querySelectorAll('.cho, .ox-choice').forEach(btn => {
         btn.onclick = (e) => {
-            e.stopPropagation();
-            if (state.pst[idx].submitted) return;
+            e.stopPropagation(); if (state.pst[idx].submitted) return;
             card.querySelectorAll('.cho, .ox-choice').forEach(b => b.classList.remove('pk'));
-            btn.classList.add('pk');
-            state.pst[idx].picked = +btn.dataset.i;
+            btn.classList.add('pk'); state.pst[idx].picked = +btn.dataset.i;
             const cfm = card.querySelector('.cfm-btn'); if (cfm) cfm.disabled = false;
         };
     });
