@@ -2,7 +2,7 @@
 // [고2 미적분 I] 함수의 극한과 연속 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"$\\lim_{x\\to a}[f(x)+g(x)]=\\lim_{x\\to a}f(x)+\\lim_{x\\to a}g(x)$이다.",ans:"O",exp:"극한의 합 공식으로, 두 극한이 존재할 때 성립한다."},
