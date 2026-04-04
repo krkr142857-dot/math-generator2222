@@ -2,7 +2,7 @@
 // [고3 확률과 통계] 확률 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"$P(A\\cup B)=P(A)+P(B)$는 항상 성립한다.",ans:"X",exp:"$P(A\\cup B)=P(A)+P(B)-P(A\\cap B)$이다. $A$, $B$가 배반사건일 때만 위 식이 성립한다."},
