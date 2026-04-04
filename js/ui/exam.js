@@ -12,4 +12,7 @@ export function startExamTimer() {
     }, 1000);
 }
 
-export function getExamScores(cnt) { /* 원본 점수 계산 로직 */ return {oxPts:[2], mcPts:[4], saPts:[3], esPts:[6]}; }
+window.doSubmitExam = (forced) => {
+    if(!forced && !confirm("제출하시겠습니까?")) return;
+    alert("시험이 종료되었습니다.");
+};
