@@ -2,7 +2,7 @@
 // [고2 대수] 지수함수와 로그함수 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"$a^m \\cdot a^n = a^{m+n}$이다.",ans:"O",exp:"지수 법칙: 밑이 같을 때 곱하면 지수를 더한다."},
