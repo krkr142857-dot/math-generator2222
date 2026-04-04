@@ -1,7 +1,6 @@
-import { state, shuf, ri } from '../app.js';
+import { state, ri, shuf } from '../app.js';
 import { wnSaveProblem } from './wrong-note.js';
 
-// --- KaTeX 렌더러 ---
 export function rm(el) {
     if (typeof renderMathInElement === 'function') {
         renderMathInElement(el, {
@@ -11,7 +10,6 @@ export function rm(el) {
     }
 }
 
-// 수식+텍스트 혼합 렌더링 (QWERTY 및 수식입력기용)
 export function renderMixedLatex(text, el) {
     if (!text || !text.trim()) { el.innerHTML = '<span class="mk-ph">수식 미리보기</span>'; return; }
     const tokens = [];
@@ -34,7 +32,6 @@ export function renderMixedLatex(text, el) {
     }).join('');
 }
 
-// 입력 상자 업데이트용 (keyboard.js에서 사용)
 export function mkUpdate() {
     const val = document.getElementById('mkInput')?.value || "";
     const preview = document.getElementById('mkRendered');
@@ -46,7 +43,6 @@ export function normalizeKaTeXDisplayText(s) {
     return String(s).replace(/(^|[^\\])dfrac\s*\{/g, (m, p1) => p1 + '\\dfrac{').replace(/\*/g, '\\cdot ');
 }
 
-// --- 카드 제어 로직 ---
 export function selCard(idx) {
     state.selIdx = idx;
     document.querySelectorAll('.pcard').forEach((c, i) => c.classList.toggle('sel', i === idx));
@@ -59,21 +55,23 @@ export function renderRP(idx) {
     const { prob } = state.problems[idx];
     const uid = 'u' + idx;
     if (state.examMode && !state.problems._examDone) {
-        rp.innerHTML = '<div class="rp-empty">🔒 시험 제출 후 정답이 공개됩니다.</div>'; return;
+        rp.innerHTML = '<div class="rp-empty">🔒 제출 후 공개</div>'; return;
     }
     const hints = Array.isArray(prob.hints) ? prob.hints : [];
     rp.innerHTML = `
         <div class="rpl">💡 문제 ${idx + 1} 풀이</div>
         <div class="fl">힌트</div>
-        ${hints.map((hi, i) => `<div class="hint-item"><button class="htog" onclick="window.thint('${uid}h${i}',this)">힌트 ${i + 1} <span class="arr">▼</span></button><div class="hbd" id="${uid}h${i}">${normalizeKaTeXDisplayText(hi)}</div></div>`).join('')}
-        <div><button class="rvb rva" onclick="window.trev('${uid}-a',this)">정답 확인</button><div class="abox" id="${uid}-a">정답: ${normalizeKaTeXDisplayText(prob.ans)}</div></div>
-        <div><button class="rvb rvs" onclick="window.trev('${uid}-s',this)">풀이 보기</button><div class="sbox" id="${uid}-s">${normalizeKaTeXDisplayText(prob.sol)}</div></div>
+        ${hints.map((hi, i) => `<div class="hint-item"><button class="htog" onclick="window.thint('${uid}h${i}',this)">힌트 ${i+1} <span class="arr">▼</span></button><div class="hbd" id="${uid}h${i}">${normalizeKaTeXDisplayText(hi)}</div></div>`).join('')}
+        <div><button class="rvb rva" onclick="window.trev('${uid}-a',this)">정답 확인</button>
+        <div class="abox" id="${uid}-a">정답: ${normalizeKaTeXDisplayText(prob.ans)}</div></div>
+        <div><button class="rvb rvs" onclick="window.trev('${uid}-s',this)">풀이 보기</button>
+        <div class="sbox" id="${uid}-s">${normalizeKaTeXDisplayText(prob.sol)}</div></div>
     `;
     rm(rp);
 }
 
 export function mkCard(idx) {
-    const { prob, sCh, sCi } = state.problems[idx];
+    const { prob, sCh } = state.problems[idx];
     const card = document.createElement('div');
     card.className = 'pcard';
     const type = (state.examMode || state.mixMode) ? (prob.type.includes('OX형') ? 'OX형' : (sCh && sCh.length ? '객관식' : '단답형')) : state.st.type;
@@ -90,23 +88,21 @@ export function mkCard(idx) {
         h += `<div class="essay-wrap"><textarea class="ein" placeholder="풀이 과정 입력"></textarea><button class="esub" onclick="window.doSubmit(${idx})">채점</button></div><div class="fb"></div>`;
     }
     card.innerHTML = h;
-    
-    // 이벤트 바인딩
+
     card.onclick = () => selCard(idx);
     card.querySelectorAll('.cho, .ox-choice').forEach(btn => {
         btn.onclick = (e) => {
-            e.stopPropagation(); if (state.pst[idx].submitted) return;
+            e.stopPropagation();
+            if (state.pst[idx].submitted) return;
             card.querySelectorAll('.cho, .ox-choice').forEach(b => b.classList.remove('pk'));
-            btn.classList.add('pk'); state.pst[idx].picked = +btn.dataset.i;
+            btn.classList.add('pk');
+            state.pst[idx].picked = +btn.dataset.i;
             const cfm = card.querySelector('.cfm-btn'); if (cfm) cfm.disabled = false;
         };
     });
-    const cfm = card.querySelector('.cfm-btn'); if (cfm) cfm.onclick = (e) => { e.stopPropagation(); window.doSubmit(idx); };
-
     return card;
 }
 
-// --- 전역 함수 등록 ---
 window.thint = (id, btn) => { const el = document.getElementById(id); el.classList.toggle('open'); btn.querySelector('.arr').textContent = el.classList.contains('open') ? '▲' : '▼'; };
 window.trev = (id, btn) => { document.getElementById(id).classList.toggle('open'); };
 window.retry = (idx) => { state.pst[idx] = { picked: -1, submitted: false, isOk: null, userText: '' }; window.generateProblems(); };
