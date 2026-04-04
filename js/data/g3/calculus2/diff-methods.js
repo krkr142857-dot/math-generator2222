@@ -2,7 +2,7 @@
 // [고3 미적분 II] 미분법 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"$(e^x)'=e^x$이다.",ans:"O",exp:"지수함수 $e^x$의 도함수는 자기 자신 $e^x$이다."},
