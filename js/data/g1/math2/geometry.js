@@ -2,7 +2,7 @@
 // [고1 공통수학2] 도형의 방정식 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [];
 
