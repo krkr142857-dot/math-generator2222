@@ -6,10 +6,15 @@ import { GRADE_UNITS } from './data/curriculum.js';
 import { initSidebar } from './ui/sidebar.js';
 import { initKeyboards, mkUpdate } from './ui/keyboard.js';
 import { initWrongNoteEvents } from './ui/wrong-note.js';
-import { mkCard, rm, selCard } from './ui/renderer.js';
-import { startExamTimer, getExamScores, EXAM_DIST } from './ui/exam.js';
 
-// 1. 전역 상태 관리 객체 (모든 모듈이 이 객체를 공유함)
+// --- UI 모듈에서 함수 가져오기 ---
+import { mkCard, rm, selCard, renderRP, renderMixedLatex, normalizeKaTeXDisplayText } from './ui/renderer.js';
+import { startExamTimer, toggleExamMode } from './ui/exam.js';
+
+// --- 다른 모듈(keyboard.js 등)이 사용할 수 있도록 함수 재배출 (이게 없어서 오류난 것임) ---
+export { renderMixedLatex, rm, mkCard, selCard, renderRP, normalizeKaTeXDisplayText };
+
+// 1. 전역 상태 관리 객체
 export const state = {
     st: { grade: "고1", sub: "다항식", lv: 2, lvL: "기본", type: "OX형", cnt: 3 },
     problems: [],
@@ -24,17 +29,7 @@ export const state = {
     examMaxSec: 0
 };
 
-// 2. 상태 변경용 Setter 함수 (모듈 환경의 읽기 전용 제약 해결)
-export const setters = {
-    setSelIdx: (val) => { state.selIdx = val; },
-    setApiKey: (val) => { state.apiKey = val; },
-    setMixMode: (val) => { state.mixMode = val; },
-    setExamMode: (val) => { state.examMode = val; },
-    setProblems: (val) => { state.problems = val; },
-    setPst: (val) => { state.pst = val; }
-};
-
-// 3. 수학 계산 및 문자열 유틸리티
+// 2. 수학 및 유틸리티 함수
 export function ri(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 export function shuf(a) {
     const b = [...a];
@@ -49,7 +44,7 @@ export function spx(n) { if (n === 0) return ''; if (n === 1) return '+x'; if (n
 export function scx(n) { if (n === 0) return '0'; if (n === 1) return 'x'; if (n === -1) return '-x'; return n + 'x'; }
 export function scx2(n) { if (n === 1) return 'x^2'; if (n === -1) return '-x^2'; return n + 'x^2'; }
 
-// 4. 데이터 모듈 통합 로드 (뱅크 구축)
+// 3. 데이터 모듈 로드
 import * as g1_poly from './data/g1/math1/polynomials.js';
 import * as g1_eq from './data/g1/math1/equations.js';
 import * as g1_comb from './data/g1/math1/combinations.js';
@@ -75,13 +70,12 @@ const DATA_MAP = {
     "고3": { "경우의 수": g3_case, "확률": g3_prob, "통계": g3_stat, "수열의 극한": g3_slim, "미분법": g3_diff }
 };
 
-// 문제 추출 핵심 함수
+// 문제 추출기
 function pick(grade, sub, lv, type, n) {
     const mod = (DATA_MAP[grade] && DATA_MAP[grade][sub]) || {};
-    let pool = [];
-    if (type === 'OX형') pool = mod.ox || [];
-    else pool = (mod.regular && mod.regular[lv]) ? mod.regular[lv].filter(p => p.type.includes(type)) : [];
-
+    let pool = (type === 'OX형') ? (mod.ox || []) : 
+               ((mod.regular && mod.regular[lv]) ? mod.regular[lv].filter(p => p.type.includes(type)) : []);
+    
     const gens = (mod.generators && mod.generators[lv]) ? mod.generators[lv].filter(g => {
         try { const t = g(); return t && t.type.includes(type); } catch(e) { return false; }
     }) : [];
@@ -89,8 +83,11 @@ function pick(grade, sub, lv, type, n) {
     let results = [];
     for(let i=0; i<n; i++) {
         let prob = null;
-        if (gens.length > 0 && Math.random() < 0.8) prob = gens[ri(0, gens.length-1)]();
-        if (!prob && pool.length > 0) prob = pool[ri(0, pool.length-1)];
+        if (gens.length > 0 && Math.random() < 0.8) {
+            const gfn = gens[ri(0, gens.length - 1)];
+            prob = gfn();
+        }
+        if (!prob && pool.length > 0) prob = pool[ri(0, pool.length - 1)];
         if (prob) {
             let sCh = [], sCi = -1;
             if (type === '객관식' && prob.choices) {
@@ -104,28 +101,8 @@ function pick(grade, sub, lv, type, n) {
     return results;
 }
 
-// 5. 초기화 및 이벤트 바인딩
-document.addEventListener('DOMContentLoaded', () => {
-    initSidebar();
-    initKeyboards();
-    initWrongNoteEvents();
-
-    document.getElementById('genBtn')?.addEventListener('click', generateProblems);
-    
-    // 테마 설정
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    window.toggleTheme = () => {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const next = isDark ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        document.getElementById('themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
-    };
-});
-
-// 6. 메인 로직: 문제 생성
-function generateProblems() {
+// 4. 전역 함수 바인딩 (index.html에서 접근 가능하도록)
+window.generateProblems = () => {
     const cp = document.getElementById('cp');
     const rp = document.getElementById('rp');
     if (state.examTimerID) { clearInterval(state.examTimerID); state.examTimerID = null; }
@@ -136,9 +113,13 @@ function generateProblems() {
     mkUpdate();
 
     if (state.examMode) {
-        // 시험 모드 로직 (생략 - 필요시 추가 가능)
-    } else if (state.mixMode) {
-        // 혼합 모드 로직 (생략)
+        // 시험 모드 배분 로직
+        const types = ['객관식', 'OX형', '단답형', '서술형'];
+        let all = [];
+        Object.keys(DATA_MAP[state.st.grade]).forEach(s => {
+            types.forEach(t => { all = all.concat(pick(state.st.grade, s, state.st.lv, t, 2)); });
+        });
+        state.problems = shuf(all).slice(0, state.st.cnt);
     } else {
         state.problems = pick(state.st.grade, state.st.sub, state.st.lv, state.st.type, state.st.cnt);
     }
@@ -149,7 +130,7 @@ function generateProblems() {
     if (rp) rp.innerHTML = '<div class="rp-empty"><div class="rp-empty-ico">👆</div><div class="rp-empty-tx">문제를 클릭하면<br>힌트·정답·풀이가<br>여기에 나옵니다</div></div>';
 
     if (state.problems.length === 0) {
-        cp.innerHTML = '<div class="empty-st"><div class="empty-ico">😅</div><div class="empty-tx">문제가 없습니다.</div></div>';
+        cp.innerHTML = '<div class="empty-st"><div class="empty-tx">선택한 단원에 문제가 없습니다.</div></div>';
         return;
     }
 
@@ -159,4 +140,14 @@ function generateProblems() {
         rm(card);
     });
     selCard(0);
-}
+};
+
+// 5. 초기화
+document.addEventListener('DOMContentLoaded', () => {
+    initSidebar();
+    initKeyboards();
+    initWrongNoteEvents();
+    
+    // 버튼 직접 연결
+    document.getElementById('genBtn')?.addEventListener('click', window.generateProblems);
+});
