@@ -2,7 +2,7 @@
 // [고1 공통수학1] 경우의 수 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"두 사건 $A$, $B$가 동시에 일어나지 않을 때, $A$ 또는 $B$가 일어나는 경우의 수는 각각의 경우의 수의 합이다.",ans:"O",exp:"합의 법칙: 동시에 일어나지 않는 두 사건의 경우의 수는 각각의 합이다."},
