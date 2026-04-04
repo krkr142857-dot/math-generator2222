@@ -4,7 +4,7 @@
 // 주의: 원본 소스 코드에 해당 단원에 대한 문항 데이터가 존재하지 않습니다.
 // 추후 기능 확장을 고려하여 데이터 구조(빈 뼈대)만 제공합니다.
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [];
 
