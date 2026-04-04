@@ -15,13 +15,21 @@ export function initSidebar() {
             state.st.lv = +b.dataset.lv; state.st.lvL = b.dataset.l; document.getElementById('lvHint').textContent = b.dataset.d;
         };
     });
+    document.querySelectorAll('#tyG .ty-btn').forEach(b => {
+        b.onclick = () => {
+            document.querySelectorAll('#tyG .ty-btn').forEach(x => x.classList.remove('on'));
+            b.classList.add('on'); state.st.type = b.dataset.v;
+        };
+    });
     document.getElementById('cDn').onclick = () => { if (state.st.cnt > 1) { state.st.cnt--; document.getElementById('cDsp').textContent = state.st.cnt; } };
     document.getElementById('cUp').onclick = () => { if (state.st.cnt < 30) { state.st.cnt++; document.getElementById('cDsp').textContent = state.st.cnt; } };
     buildSubList('고1');
 }
 
 function buildSubList(grade) {
-    const subjCont = document.getElementById('subjG'); subjCont.innerHTML = '';
+    const subjCont = document.getElementById('subjG'); 
+    if(!subjCont) return;
+    subjCont.innerHTML = '';
     GRADE_UNITS[grade].forEach((subj, si) => {
         const sb = document.createElement('button'); sb.className = 'grade-tab' + (si === 0 ? ' on' : '');
         sb.textContent = subj.subject;
@@ -32,7 +40,9 @@ function buildSubList(grade) {
 }
 
 function buildUnitButtons(grade, si) {
-    const cont = document.getElementById('subG'); cont.innerHTML = '';
+    const cont = document.getElementById('subG'); 
+    if(!cont) return;
+    cont.innerHTML = '';
     GRADE_UNITS[grade][si].units.forEach((u, i) => {
         const b = document.createElement('button'); b.className = 'sub-btn' + (i === 0 ? ' on' : '');
         b.innerHTML = `${u.v}<div class="sd">${u.d}</div>`;
