@@ -2,7 +2,7 @@
 // [고1 공통수학1] 다항식 데이터 모듈
 // ============================================================================
 
-import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../app.js'; // 헬퍼 함수 임포트 (app.js 구성 후 연결)
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"$(a+b)^2 = a^2+2ab+b^2$이다.",ans:"O",exp:"$(a+b)^2$을 전개하면 $a^2+2ab+b^2$이므로 참이다."},
