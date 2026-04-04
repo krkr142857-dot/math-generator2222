@@ -5,28 +5,30 @@ export function initSidebar() {
     document.querySelectorAll('#gradeG .grade-tab').forEach(b => {
         b.onclick = () => {
             document.querySelectorAll('#gradeG .grade-tab').forEach(x => x.classList.remove('on'));
-            b.classList.add('on');
-            state.st.grade = b.dataset.g;
+            b.classList.add('on'); state.st.grade = b.dataset.g;
             buildSubList(state.st.grade);
         };
     });
-    
+
     document.querySelectorAll('#lvG .lv-btn').forEach(b => {
         b.onclick = () => {
-            document.querySelectorAll('#lvG .lv-btn').forEach(x => {
-                x.classList.remove('on');
-                x.style = "";
-            });
-            b.classList.add('on');
-            const c = b.dataset.c;
-            b.style.borderColor = c;
-            b.style.background = c + '18';
-            b.style.color = c;
-            state.st.lv = +b.dataset.lv;
-            state.st.lvL = b.dataset.l;
+            document.querySelectorAll('#lvG .lv-btn').forEach(x => { x.classList.remove('on'); x.style = ""; });
+            b.classList.add('on'); const c = b.dataset.c;
+            b.style.borderColor = c; b.style.background = c + '18'; b.style.color = c;
+            state.st.lv = +b.dataset.lv; state.st.lvL = b.dataset.l;
             document.getElementById('lvHint').textContent = b.dataset.d;
         };
     });
+
+    document.querySelectorAll('#tyG .ty-btn').forEach(b => {
+        b.onclick = () => {
+            document.querySelectorAll('#tyG .ty-btn').forEach(x => x.classList.remove('on'));
+            b.classList.add('on'); state.st.type = b.dataset.v;
+        };
+    });
+
+    document.getElementById('cDn').onclick = () => { if (state.st.cnt > 1) { state.st.cnt--; document.getElementById('cDsp').textContent = state.st.cnt; } };
+    document.getElementById('cUp').onclick = () => { if (state.st.cnt < 30) { state.st.cnt++; document.getElementById('cDsp').textContent = state.st.cnt; } };
 
     buildSubList('고1');
 }
@@ -41,8 +43,7 @@ function buildSubList(grade) {
         sb.textContent = subj.subject;
         sb.onclick = () => {
             document.querySelectorAll('#subjG .grade-tab').forEach(x => x.classList.remove('on'));
-            sb.classList.add('on');
-            buildUnitButtons(grade, si);
+            sb.classList.add('on'); buildUnitButtons(grade, si);
         };
         subjCont.appendChild(sb);
     });
@@ -59,8 +60,7 @@ function buildUnitButtons(grade, si) {
         b.innerHTML = `${u.v}<div class="sd">${u.d}</div>`;
         b.onclick = () => {
             document.querySelectorAll('#subG .sub-btn').forEach(x => x.classList.remove('on'));
-            b.classList.add('on');
-            state.st.sub = u.v;
+            b.classList.add('on'); state.st.sub = u.v;
         };
         cont.appendChild(b);
     });
