@@ -2,7 +2,7 @@
 // [고2 미적분 I] 미분 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"$(x^n)'=nx^n$이다.",ans:"X",exp:"$(x^n)'=nx^{n-1}$이다. 지수가 1 줄어든다."},
