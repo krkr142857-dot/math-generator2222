@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>고등학교 수학 문제 생성기</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@400;600&family=Caveat:wght@700&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="style.css"/>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <title>고등학교 수학 문제 생성기</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@400;600&family=Caveat:wght@700&display=swap" rel="stylesheet"/>
+    
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -31,30 +32,11 @@
     </div>
     <button class="sp-start" onclick="document.getElementById('splash').classList.add('hidden')">시작하기</button>
     <div class="sp-desc">OX형 · 객관식 · 단답형 · 서술형 · 난이도 5단계</div>
-    <div style="margin-top:28px;width:100%;border-top:1px solid rgba(255,255,255,.12);padding-top:14px;display:flex;align-items:center;justify-content:space-between;position:relative">
-      <div style="display:flex;align-items:center;gap:0;flex:1;justify-content:space-around;padding-right:16px">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-          <img src="img/claude.webp" width="30" height="30" style="border-radius:8px;object-fit:cover"/>
-          <div style="font-size:9px;color:rgba(255,200,100,.75);font-weight:600">Claude</div>
+    <div class="sp-maker-box" style="margin-top:28px;width:100%;border-top:1px solid rgba(255,255,255,.12);padding-top:14px;display:flex;align-items:center;justify-content:space-between;position:relative">
+        <div style="text-align:right;flex-shrink:0;width:100%">
+            <div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6">수학교육과 20200522</div>
+            <div style="font-size:13.5px;font-weight:700;color:rgba(255,255,255,.85)">이상진</div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-          <img src="img/gemini.webp" width="30" height="30" style="border-radius:8px;background:#fff;padding:3px;object-fit:contain" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-          <div style="display:none;width:30px;height:30px;background:linear-gradient(135deg,#1a73e8,#4285f4);border-radius:8px;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#fff">✧</div>
-          <div style="font-size:9px;color:rgba(150,200,255,.75);font-weight:600">Gemini</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-          <img src="img/grok.webp" width="30" height="30" style="border-radius:8px;object-fit:cover"/>
-          <div style="font-size:9px;color:rgba(200,200,200,.7);font-weight:600">Grok</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-          <img src="img/cursor.webp" width="30" height="30" style="border-radius:8px;object-fit:cover"/>
-          <div style="font-size:9px;color:#1a1a2e;font-weight:700;letter-spacing:-0.3px">Cursor</div>
-        </div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.6">수학교육과 20200522</div>
-        <div style="font-size:13.5px;font-weight:700;color:rgba(255,255,255,.85)">이상진</div>
-      </div>
     </div>
   </div>
 </div>
@@ -62,12 +44,15 @@
 <header>
   <div class="logo">
     <div class="logo-ico">∑</div>
-    <div><div class="logo-tx">고등학교 수학 문제 생성기</div><div class="logo-sb">2022 개정 교육과정 · 고1 · 고2 · 고3</div></div>
+    <div>
+        <div class="logo-tx">고등학교 수학 문제 생성기</div>
+        <div class="logo-sb">2022 개정 교육과정 · 고1 · 고2 · 고3</div>
+    </div>
   </div>
-<div style="display:flex;align-items:center;gap:8px">
-    <button class="wn-hbtn" onclick="wnOpen()">📕 오답 노트 <span class="wn-cnt" id="wnCount">0</span></button>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="wn-hbtn" onclick="window.wnOpen()">📕 오답 노트 <span class="wn-cnt" id="wnCount">0</span></button>
     <div class="hbadge">수학교육과 캡스톤디자인I</div>
-    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="다크/라이트 모드">🌙</button>
+    <button class="theme-btn" id="themeBtn" onclick="window.toggleTheme()" title="다크/라이트 모드">🌙</button>
   </div>
 </header>
 
@@ -85,7 +70,7 @@
     <div>
       <div class="fl">단원</div>
       <div id="subjG" style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap"></div>
-    <div class="sub-list" id="subG"></div>
+      <div class="sub-list" id="subG"></div>
       <div class="mode-btns">
         <button class="mix-btn" id="mixBtn">단원 혼합 출제</button>
         <button class="exam-btn" id="examBtn"><span class="exam-dot" id="examDot"></span><span id="examBtnTxt">시험 모드</span></button>
@@ -131,75 +116,42 @@
   </div>
 
   <div class="kp" id="kp">
-  
-  <div class="kp-upper-wrapper">
-    <div class="kp-upper-expandable" id="kpExpandable">
-<div class="kp-toggle-wrap">
-    <div class="kp-lbl" style="margin:0;">📐 수식 입력기</div>
-    <button class="theme-btn" id="kpToggleBtn" onclick="toggleKpExpand()" title="패널 열기/닫기" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--dim);padding:0;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></button>
-  </div>
-      <div class="kp-upper-scroll">
-<textarea id="mkInput" class="mk-input" placeholder="여기에 직접 입력&#10;한글·수식·LaTeX 가능&#10;예) 3x^2+2x-1"></textarea>
-      <div id="mkRendered" class="mk-rendered"><span class="mk-ph">수식 미리보기</span></div>
-    <button class="mk-apply-btn" id="mkApplyBtn">답안에 입력하기</button>
-      
-<div class="mkgrid" id="mkGridMini" style="background:var(--w); position:relative; z-index:100; padding:4px 0 16px 0; border-radius:8px;"></div>
-<div id="mkGridFull" style="display:none; flex-direction:column; gap:4px;   font-family: 'Pretendard', sans-serif;">
-    <div id="qwertyArea"></div>
-    <div style="height:1px; background:var(--bd); margin:4px 0;"></div>
-    <div style="display:flex; gap:8px; align-items:stretch;">
-        <div id="mathArea" style="flex:8; display:flex; flex-direction:column;"></div>
-        <div style="width:1px; background:var(--bd); flex-shrink:0;"></div>
-        <div id="numArea" style="flex:5; display:grid; grid-template-columns:repeat(5,1fr); gap:5px; grid-auto-rows: 1fr;"></div>
+    <div class="kp-upper-wrapper">
+      <div class="kp-upper-expandable" id="kpExpandable">
+        <div class="kp-toggle-wrap">
+          <div class="kp-lbl">📐 수식 입력기</div>
+          <button class="theme-btn" id="kpToggleBtn" onclick="window.toggleKpExpand()">⌨</button>
+        </div>
+        <div class="kp-upper-scroll">
+          <textarea id="mkInput" class="mk-input" placeholder="직접 입력 또는 아래 버튼 사용"></textarea>
+          <div id="mkRendered" class="mk-rendered"><span class="mk-ph">수식 미리보기</span></div>
+          <button class="mk-apply-btn" id="mkApplyBtn">답안에 입력하기</button>
+          <div class="mkgrid" id="mkGridMini"></div>
+        </div>
+      </div>
     </div>
-</div>
-
-            </div>
-    </div>
-  </div>
-  <div class="kp-lower-fixed">
-<button class="latex-copy-btn" id="latexCopyBtn">📋 수식 가져오기<br><span style="font-size:10.5px;font-weight:500;opacity:.75">(드래그 선택 후 클릭)</span></button>
+    <div class="kp-lower-fixed">
+      <button class="latex-copy-btn" id="latexCopyBtn">📋 수식 가져오기</button>
       <div class="api-section">
-        <div class="api-lbl" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px"><span>🤖 Groq API</span><span id="apiModeBadge" class="api-badge mode-kw">키워드 채점</span></div>
+        <div class="api-lbl">🤖 Groq API <span id="apiModeBadge" class="api-badge mode-kw">키워드 채점</span></div>
         <div class="api-row">
-          <input class="api-in" id="apiIn" type="password" placeholder="gsk_... 키 입력"/>
+          <input class="api-in" id="apiIn" type="password" placeholder="API 키 입력"/>
           <button class="api-save" id="apiSaveBtn">저장</button>
         </div>
-  </div>
-</div>
-
+      </div>
     </div>
   </div>
 </div>
 
-<div class="wn-overlay" id="wnOverlay" onclick="wnClose()"></div>
+<div class="wn-overlay" id="wnOverlay" onclick="window.wnClose()"></div>
 <div class="wn-panel" id="wnPanel">
   <div class="wn-head">
     <span class="wn-head-title">📕 오답 노트</span>
-    <button class="wn-head-close" onclick="wnClose()">✕</button>
-  </div>
-  <div class="wn-filter-wrap">
-    <div class="wn-grade-row" id="wnGradeRow">
-      <button class="wn-fbtn on" data-g="고1" onclick="wnSetGrade(this,'고1')">고1</button>
-      <button class="wn-fbtn" data-g="고2" onclick="wnSetGrade(this,'고2')">고2</button>
-      <button class="wn-fbtn" data-g="고3" onclick="wnSetGrade(this,'고3')">고3</button>
-      <button class="wn-selunits-all" id="wnSelUnitsAllBtn" onclick="wnToggleAllUnits()">모두 선택</button>
-    </div>
-    <div id="wnSubjRow" style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap"></div>
-      <div class="wn-sub-grid" id="wnSubGrid"></div>
-  </div>
-  <div class="wn-sel-bar">
-    <span id="wnSelInfo">0개 선택됨</span>
-    <button class="wn-sel-all" onclick="wnToggleAll()">전체 선택</button>
+    <button class="wn-head-close" onclick="window.wnClose()">✕</button>
   </div>
   <div class="wn-list" id="wnList"></div>
-  <div class="wn-footer">
-    <button class="wn-retry-sel" id="wnRetrySelBtn" onclick="wnRetry()" disabled>다시 풀기</button>
-    <button class="wn-clear" onclick="wnDeleteSel()">문항 삭제</button>
-  </div>
 </div>
 
-<!-- JS 모듈 연결 -->
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
