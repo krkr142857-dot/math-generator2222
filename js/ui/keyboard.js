@@ -18,21 +18,25 @@ const MKB = [
 export function initKeyboards() {
     const mini = document.getElementById('mkGridMini');
     const input = document.getElementById('mkInput');
-    if (mini) {
-        mini.innerHTML = '';
-        MKB.flat().forEach(btn => {
-            const b = document.createElement('button');
-            b.className = `mkb ${btn.c}`; b.textContent = btn.l;
-            b.onclick = () => {
-                if(btn.act === 'back') { input.value = input.value.slice(0, -1); }
-                else if(btn.act === 'clear') { input.value = ''; }
-                else if(btn.v) { input.value += btn.v; }
-                mkUpdate();
-            };
-            mini.appendChild(b);
-        });
-    }
-    document.getElementById('mkApplyBtn').onclick = () => {
+    const applyBtn = document.getElementById('mkApplyBtn');
+    if (!mini || !input) return;
+
+    mini.innerHTML = '';
+    MKB.flat().forEach(btn => {
+        const b = document.createElement('button');
+        b.className = `mkb ${btn.c}`; b.textContent = btn.l;
+        b.onclick = () => {
+            if(btn.act === 'back') { input.value = input.value.slice(0, -1); }
+            else if(btn.act === 'clear') { input.value = ''; }
+            else if(btn.v) { input.value += btn.v; }
+            mkUpdate();
+        };
+        mini.appendChild(b);
+    });
+
+    input.addEventListener('input', mkUpdate);
+
+    applyBtn.onclick = () => {
         if (state.selIdx === -1) return alert("문제를 선택하세요.");
         const target = document.querySelectorAll('.pcard')[state.selIdx]?.querySelector('input, textarea');
         if (target) { target.value += input.value; input.value = ""; mkUpdate(); target.dispatchEvent(new Event('input')); }
