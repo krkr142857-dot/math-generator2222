@@ -1,16 +1,11 @@
-// ============================================================================
-// [최종 통합 컨트롤러] js/app.js
-// 모든 데이터를 로드하고 전역 상태를 관리하며 UI 모듈을 초기화합니다.
-// ============================================================================
-
 import { GRADE_UNITS } from './data/curriculum.js';
 import { initSidebar } from './ui/sidebar.js';
 import { initKeyboards } from './ui/keyboard.js';
 import { initWrongNoteEvents } from './ui/wrong-note.js';
-import { mkCard, rm, selCard, renderRP, mkUpdate } from './ui/renderer.js';
-import { startExamTimer, EXAM_DIST, getExamScores } from './ui/exam.js';
+import { mkCard, rm, selCard, renderRP } from './ui/renderer.js';
+import { startExamTimer, getExamScores, EXAM_DIST } from './ui/exam.js';
 
-// --- 1. 전역 상태 객체 ---
+// --- 전역 상태 ---
 export const state = {
     st: { grade: "고1", sub: "다항식", lv: 2, lvL: "기본", type: "OX형", cnt: 3 },
     problems: [],
@@ -25,7 +20,7 @@ export const state = {
     examMaxSec: 0
 };
 
-// --- 2. 수학 및 유틸리티 함수 (내보내기) ---
+// --- 유틸리티 함수 ---
 export function ri(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 export function shuf(a) {
     const b = [...a];
@@ -40,7 +35,7 @@ export function spx(n) { if (n === 0) return ''; if (n === 1) return '+x'; if (n
 export function scx(n) { if (n === 0) return '0'; if (n === 1) return 'x'; if (n === -1) return '-x'; return n + 'x'; }
 export function scx2(n) { if (n === 1) return 'x^2'; if (n === -1) return '-x^2'; return n + 'x^2'; }
 
-// --- 3. 데이터 모듈 통합 로드 ---
+// --- 데이터 맵핑 ---
 import * as g1_p from './data/g1/math1/polynomials.js';
 import * as g1_e from './data/g1/math1/equations.js';
 import * as g1_c from './data/g1/math1/combinations.js';
@@ -66,7 +61,6 @@ const DATA_MAP = {
     "고3": { "경우의 수": g3_c_, "확률": g3_p_, "통계": g3_s_, "수열의 극한": g3_sl, "미분법": g3_dm }
 };
 
-// --- 4. 문제 추출 핵심 엔진 ---
 function pick(grade, sub, lv, type, n) {
     const mod = (DATA_MAP[grade] && DATA_MAP[grade][sub]) || {};
     let pool = (type === 'OX형') ? (mod.ox || []) : ((mod.regular && mod.regular[lv]) ? mod.regular[lv].filter(p => p.type.includes(type)) : []);
@@ -92,17 +86,12 @@ function pick(grade, sub, lv, type, n) {
     return results;
 }
 
-// --- 5. 문제 생성 실행 함수 ---
 window.generateProblems = () => {
     const cp = document.getElementById('cp');
     const rp = document.getElementById('rp');
     if (state.examTimerID) { clearInterval(state.examTimerID); state.examTimerID = null; }
-
     state.selIdx = -1;
-    const mkInputEl = document.getElementById('mkInput');
-    if (mkInputEl) mkInputEl.value = '';
-    mkUpdate(); // 미리보기 초기화
-
+    
     if (state.examMode) {
         let all = [];
         Object.keys(DATA_MAP[state.st.grade]).forEach(s => {
@@ -111,25 +100,19 @@ window.generateProblems = () => {
             });
         });
         state.problems = shuf(all).slice(0, state.st.cnt);
-    } else if (state.mixMode) {
-        let all = [];
-        state.mixSubs.forEach(sub => { all = all.concat(pick(state.st.grade, sub, state.st.lv, state.st.type, state.st.cnt)); });
-        state.problems = shuf(all).slice(0, state.st.cnt);
     } else {
         state.problems = pick(state.st.grade, state.st.sub, state.st.lv, state.st.type, state.st.cnt);
     }
 
     state.pst = state.problems.map(() => ({ picked: -1, submitted: false, isOk: null, userText: '' }));
-    if (cp) cp.innerHTML = '';
-    if (rp) rp.innerHTML = '<div class="rp-empty"><div class="rp-empty-ico">👆</div><div class="rp-empty-tx">문제를 클릭하면<br>힌트·정답·풀이가 나옵니다</div></div>';
-
+    cp.innerHTML = '';
+    
     if (state.problems.length === 0) {
-        cp.innerHTML = '<div class="empty-st"><div class="empty-ico">😅</div><div class="empty-tx">문제가 없습니다.</div></div>';
+        cp.innerHTML = '<div class="empty-st"><div class="empty-tx">문제가 없습니다.</div></div>';
         return;
     }
 
     if (state.examMode) {
-        // 시험 모드 상단 바 생성 로직 (생략 없이 원본 유지)
         const bar = document.createElement('div');
         bar.id = 'examBarEl'; bar.className = 'exam-bar';
         bar.innerHTML = `<div class="exam-bar-left"><div class="exam-bar-label">시험 진행 중</div><div class="exam-bar-timer-box"><div class="exam-bar-timer" id="examBarTimer">00:00</div></div></div><div class="exam-bar-info" id="examBarInfo"></div><button class="exam-bar-submit" onclick="window.doSubmitExam(false)">시험지 제출</button>`;
@@ -145,14 +128,12 @@ window.generateProblems = () => {
     selCard(0);
 };
 
-// --- 6. 초기화 ---
 document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
     initKeyboards();
     initWrongNoteEvents();
     document.getElementById('genBtn')?.addEventListener('click', window.generateProblems);
-
-    // 테마 설정
+    
     window.toggleTheme = () => {
         const html = document.documentElement;
         const current = html.getAttribute('data-theme');
