@@ -1,4 +1,4 @@
-// js/utils.js - 모든 유틸리티 함수 통합
+// js/utils.js - 모든 유틸리티 함수
 export function ri(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 export function shuf(a) {
     const b = [...a];
@@ -15,19 +15,16 @@ export function scx2(n) { if (n === 1) return 'x^2'; if (n === -1) return '-x^2'
 
 function cleanExpr(s) {
     if (typeof s !== 'string') return String(s);
-    let r = s;
-    r = r.replace(/(?<![\d.])1x/g, 'x').replace(/\+1x/g, '+x').replace(/-1x/g, '-x');
+    let r = s.replace(/(?<![\d.])1x/g, 'x').replace(/\+1x/g, '+x').replace(/-1x/g, '-x');
     r = r.replace(/[+\-]?0x(\^?\{?\d*\}?)?/g, '').replace(/([+\-])0(?![.\d])/g, '');
     r = r.replace(/\+\+/g, '+').replace(/\+-/g, '-').replace(/--/g, '+').replace(/^\+/, '');
     return r || '0';
 }
-
 export function cleanLatex(s) {
     s = String(s);
     if (((s.match(/\$/g) || []).length) % 2 === 1) s += '$';
     return s.replace(/\$([^$]+)\$/g, (m, expr) => '$' + cleanExpr(expr) + '$');
 }
-
 export function makeWrongChoices(correct, wrongs) {
     const cc = cleanLatex(String(correct).trim());
     const normW = w => String(w).replace(/[\$\s\\]/g, '').toLowerCase();
