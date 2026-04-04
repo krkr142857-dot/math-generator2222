@@ -2,7 +2,7 @@
 // [고2 미적분 I] 적분 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"$\\int x^n dx = \\dfrac{x^{n+1}}{n+1}+C$ ($n\\neq-1$)이다.",ans:"O",exp:"거듭제곱 함수의 적분 공식이다."},
