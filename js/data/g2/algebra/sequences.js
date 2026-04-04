@@ -2,7 +2,7 @@
 // [고2 대수] 수열 데이터 모듈
 // ============================================================================
 
-import { ri, sp, makeWrongChoices } from '../../../app.js';
+import { ri, sp, spx, scx, scx2, makeWrongChoices } from '../../../utils.js';
 
 export const ox = [
    {q:"등차수열의 공차가 양수이면 수열은 단조증가한다.",ans:"O",exp:"공차 $d>0$이면 $a_{n+1}-a_n=d>0$이므로 단조증가한다."},
